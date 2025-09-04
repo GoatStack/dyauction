@@ -52,7 +52,7 @@ export default function EditProfileScreen() {
         return;
       }
 
-      const response = await fetch('http://11.182.185.87:3000/api/users/profile', {
+      const response = await fetch('http://192.168.0.36:3000/api/users/profile', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -119,7 +119,7 @@ export default function EditProfileScreen() {
       }
 
       // 프로필 정보 업데이트
-      const response = await fetch('http://11.182.185.87:3000/api/users/profile', {
+      const response = await fetch('http://192.168.0.36:3000/api/users/profile', {
         method: 'PUT',
         headers: { 
           'Authorization': `Bearer ${(global as any).token || 'test-token'}`,
@@ -206,7 +206,7 @@ export default function EditProfileScreen() {
 
       console.log('FormData created:', formData);
 
-      const response = await fetch('http://11.182.185.87:3000/api/users/upload-profile-image', {
+      const response = await fetch('http://192.168.0.36:3000/api/users/upload-profile-image', {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${(global as any).token || 'test-token'}`,
@@ -270,7 +270,7 @@ export default function EditProfileScreen() {
                 {profileImage ? (
                   <Image source={{ uri: profileImage }} style={styles.profileImage} />
                 ) : user?.profileImage ? (
-                  <Image source={{ uri: `http://11.182.185.87:3000${user.profileImage}` }} style={styles.profileImage} />
+                  <Image source={{ uri: `http://192.168.0.36:3000${user.profileImage}` }} style={styles.profileImage} />
                 ) : (
                   <Avatar.Text size={80} label={user?.name?.charAt(0) || 'U'} />
                 )}

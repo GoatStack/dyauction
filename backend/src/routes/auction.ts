@@ -136,7 +136,7 @@ router.post('/upload-image', auth, upload.single('auctionImage'), async (req: Au
       return res.status(400).json({ message: '이미지 파일이 필요합니다.' });
     }
 
-    const imageUrl = `http://11.182.185.87:3000/uploads/${req.file.filename}`;
+    const imageUrl = `http://192.168.0.36:3000/uploads/${req.file.filename}`;
     
     console.log('📤 경매 이미지 업로드 성공:', {
       filename: req.file.filename,
@@ -340,11 +340,11 @@ router.get('/hot', async (req, res) => {
           // 로컬 파일 경로인 경우 웹 URL로 변환
           if (img.startsWith('file://')) {
             const filename = img.split('/').pop();
-            return `http://11.182.185.87:3000/uploads/${filename}`;
+            return `http://192.168.0.36:3000/uploads/${filename}`;
           } 
           // 파일명만 있는 경우
           if (img.includes('.jpg') || img.includes('.png') || img.includes('.jpeg')) {
-            return `http://11.182.185.87:3000/uploads/${img}`;
+            return `http://192.168.0.36:3000/uploads/${img}`;
           }
           return img;
         });
@@ -464,11 +464,11 @@ router.post('/', auth, async (req: AuthRequest, res) => {
         // 로컬 파일 경로인 경우에만 변환
         if (imageUri.startsWith('file://')) {
           const filename = imageUri.split('/').pop();
-          return `http://11.182.185.87:3000/uploads/${filename}`;
+          return `http://192.168.0.36:3000/uploads/${filename}`;
         }
         // 파일명만 있는 경우
         if (imageUri.includes('.jpg') || imageUri.includes('.png') || imageUri.includes('.jpeg')) {
-          return `http://11.182.185.87:3000/uploads/${imageUri}`;
+          return `http://192.168.0.36:3000/uploads/${imageUri}`;
         }
         return imageUri;
       });

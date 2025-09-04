@@ -19,7 +19,9 @@ export default function App() {
       });
 
     // 푸시 알림 권한 요청
-    PushNotificationService.requestPermissions();
+    PushNotificationService.requestPermissions().catch(error => {
+      console.error('푸시 알림 권한 요청 실패:', error);
+    });
   }, []);
 
   return (

@@ -1,7 +1,7 @@
 // API 설정
 export const API_CONFIG = {
   // 개발 환경에서는 실제 IP 주소 사용
-  BASE_URL: __DEV__ ? 'http://11.182.183.250:3000' : 'https://your-production-domain.com',
+  BASE_URL: __DEV__ ? 'http://192.168.0.36:3000' : 'https://your-production-domain.com',
   
   // API 엔드포인트
   ENDPOINTS: {
@@ -17,10 +17,10 @@ export const API_CONFIG = {
 
 // 개발 환경에서 사용할 수 있는 IP 주소들 (실제 IP 우선)
 export const DEV_IP_ADDRESSES = [
-  'http://11.182.183.250:3000', // 실제 컴퓨터 IP (우선순위 1)
-  'http://11.182.185.87:3000',       // 로컬호스트
+  'http://192.168.0.36:3000', // 현재 컴퓨터 IP (우선순위 1)
+  'http://11.182.183.250:3000', // 이전 IP
+  'http://11.182.185.87:3000', // 이전 IP
   'http://10.0.2.2:3000',       // Android 에뮬레이터
-  'http://11.182.185.87:3000',      // 로컬호스트
 ];
 
 // API URL 생성 헬퍼 함수
@@ -36,23 +36,23 @@ export const findWorkingApiUrl = async (): Promise<string> => {
 
   console.log('🔍 API 주소 자동 감지 중...');
   
-  // 실제 IP 주소 우선 시도
+  // 현재 IP 주소 우선 시도
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000);
     
-    const response = await fetch('http://11.182.183.250:3000/api/health', {
+    const response = await fetch('http://192.168.0.36:3000/api/health', {
       method: 'GET',
       signal: controller.signal
     });
     
     clearTimeout(timeoutId);
     if (response.ok) {
-      console.log('✅ 실제 IP 주소로 연결 성공');
-      return 'http://11.182.183.250:3000';
+      console.log('✅ 현재 IP 주소로 연결 성공');
+      return 'http://192.168.0.36:3000';
     }
   } catch (error) {
-    console.log('❌ 실제 IP 주소 연결 실패:', error);
+    console.log('❌ 현재 IP 주소 연결 실패:', error);
   }
 
   // 로컬호스트 시도

@@ -114,7 +114,9 @@ class NotificationManager {
     );
     
     // 푸시 알림도 함께 발송 (경매 제목은 나중에 추가)
-    PushNotificationService.sendBidNotification('경매', bidAmount);
+    PushNotificationService.sendBidNotification('경매', bidAmount).catch(error => {
+      console.error('푸시 알림 발송 실패:', error);
+    });
   }
 
   addAuctionCreatedNotification(userId: number, auctionTitle: string) {
@@ -126,14 +128,18 @@ class NotificationManager {
     );
     
     // 푸시 알림도 함께 발송
-    PushNotificationService.sendAuctionCreatedNotification(auctionTitle);
+    PushNotificationService.sendAuctionCreatedNotification(auctionTitle).catch(error => {
+      console.error('푸시 알림 발송 실패:', error);
+    });
   }
 
   addApprovalNotification(userId: number, auctionId: number, title: string, message: string) {
     this.addPersonalNotification(title, message, userId, auctionId, 'approval');
     
     // 푸시 알림도 함께 발송
-    PushNotificationService.sendAuctionApprovedNotification(title);
+    PushNotificationService.sendAuctionApprovedNotification(title).catch(error => {
+      console.error('푸시 알림 발송 실패:', error);
+    });
   }
 
   addWinNotification(userId: number, auctionId: number, title: string, message: string) {
@@ -142,7 +148,9 @@ class NotificationManager {
     // 푸시 알림도 함께 발송 (금액 추출)
     const amountMatch = message.match(/(\d+(?:,\d{3})*)/);
     const amount = amountMatch ? parseInt(amountMatch[1].replace(/,/g, '')) : 0;
-    PushNotificationService.sendWinNotification(title, amount);
+    PushNotificationService.sendWinNotification(title, amount).catch(error => {
+      console.error('푸시 알림 발송 실패:', error);
+    });
   }
 
   markAsRead(notificationId: string) {

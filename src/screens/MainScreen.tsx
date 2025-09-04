@@ -58,12 +58,12 @@ const convertImageUrl = (imageUrl: any): string => {
   // 로컬 파일 경로인 경우 웹 URL로 변환
   if (imageUrl.startsWith('file://')) {
     const filename = imageUrl.split('/').pop();
-    return `http://11.182.185.87:3000/uploads/${filename}`;
+    return `http://192.168.0.36:3000/uploads/${filename}`;
   }
   
   // 파일명만 있는 경우
   if (imageUrl.includes('.jpg') || imageUrl.includes('.png') || imageUrl.includes('.jpeg')) {
-    return `http://11.182.185.87:3000/uploads/${imageUrl}`;
+    return `http://192.168.0.36:3000/uploads/${imageUrl}`;
   }
   
   return imageUrl;

@@ -1,5 +1,5 @@
-import PushNotification from 'react-native-push-notification';
-import { Platform } from 'react-native';
+import { Platform, Alert } from 'react-native';
+// import * as Notifications from 'expo-notifications';
 
 class PushNotificationService {
   private static instance: PushNotificationService;
@@ -16,83 +16,26 @@ class PushNotificationService {
   }
 
   private configure() {
-    PushNotification.configure({
-      // (required) Called when a remote or local notification is opened or received
-      onNotification: function(notification) {
-        console.log('NOTIFICATION:', notification);
-        
-        // process the notification
-        if (notification.userInteraction) {
-          // 앱이 백그라운드에서 알림을 탭했을 때
-          console.log('알림 탭됨:', notification);
-        }
-      },
-
-      // (optional) Called when Registered Action is pressed and invokeApp is false, if true onNotification will be called (Android)
-      onAction: function(notification) {
-        console.log('ACTION:', notification.action);
-        console.log('NOTIFICATION:', notification);
-      },
-
-      // (optional) Called when the user fails to register for remote notifications. Typically occurs when APNS is having issues, or the device is a simulator. (iOS)
-      onRegistrationError: function(err) {
-        console.error(err.message, err);
-      },
-
-      // IOS ONLY (optional): default: all - Permissions to register.
-      permissions: {
-        alert: true,
-        badge: true,
-        sound: true,
-      },
-
-      // Should the initial notification be popped automatically
-      // default: true
-      popInitialNotification: true,
-
-      /**
-       * (optional) default: true
-       * - Specified if permissions (ios) and token (android and ios) will requested or not,
-       * - if not, you must call PushNotificationsHandler.requestPermissions() later
-       * - if you are not using remote notification or do not have Firebase installed, use this:
-       *     requestPermissions: Platform.OS === 'ios'
-       */
-      requestPermissions: Platform.OS === 'ios',
-    });
-
-    // 로컬 알림 채널 생성 (Android)
-    PushNotification.createChannel(
-      {
-        channelId: "auction-notifications",
-        channelName: "경매 알림",
-        channelDescription: "경매 관련 알림을 받습니다",
-        playSound: true,
-        soundName: "default",
-        importance: 4,
-        vibrate: true,
-      },
-      (created) => console.log(`createChannel returned '${created}'`)
-    );
+    // Expo Go에서는 푸시 알림을 Alert로 대체
+    console.log('푸시 알림 서비스 초기화 (Expo Go 모드)');
   }
 
-  // 로컬 알림 보내기
-  public sendLocalNotification(title: string, message: string, data?: any) {
-    PushNotification.localNotification({
-      channelId: "auction-notifications",
-      title: title,
-      message: message,
-      playSound: true,
-      soundName: 'default',
-      vibrate: true,
-      vibration: 300,
-      data: data,
-      actions: '["확인", "나중에"]',
-    });
+  // 로컬 알림 보내기 (Expo Go에서는 Alert로 대체)
+  public async sendLocalNotification(title: string, message: string, data?: any) {
+    try {
+      // Expo Go에서는 Alert로 알림 표시
+      Alert.alert(title, message, [
+        { text: '확인', style: 'default' }
+      ]);
+      console.log(`📱 알림: ${title} - ${message}`);
+    } catch (error) {
+      console.error('알림 발송 실패:', error);
+    }
   }
 
   // 경매 등록 알림
-  public sendAuctionCreatedNotification(auctionTitle: string) {
-    this.sendLocalNotification(
+  public async sendAuctionCreatedNotification(auctionTitle: string) {
+    await this.sendLocalNotification(
       '경매 등록 완료',
       `"${auctionTitle}" 경매가 등록되었습니다. 관리자 승인 후 게시됩니다.`,
       { type: 'auction_created', auctionTitle }
@@ -100,8 +43,8 @@ class PushNotificationService {
   }
 
   // 경매 승인 알림
-  public sendAuctionApprovedNotification(auctionTitle: string) {
-    this.sendLocalNotification(
+  public async sendAuctionApprovedNotification(auctionTitle: string) {
+    await this.sendLocalNotification(
       '경매 승인',
       `"${auctionTitle}" 경매가 승인되어 게시되었습니다.`,
       { type: 'auction_approved', auctionTitle }
@@ -109,8 +52,8 @@ class PushNotificationService {
   }
 
   // 입찰 알림
-  public sendBidNotification(auctionTitle: string, amount: number) {
-    this.sendLocalNotification(
+  public async sendBidNotification(auctionTitle: string, amount: number) {
+    await this.sendLocalNotification(
       '입찰 완료',
       `"${auctionTitle}"에 ${amount.toLocaleString()}원으로 입찰하셨습니다.`,
       { type: 'bid_placed', auctionTitle, amount }
@@ -118,8 +61,8 @@ class PushNotificationService {
   }
 
   // 낙찰 알림
-  public sendWinNotification(auctionTitle: string, amount: number) {
-    this.sendLocalNotification(
+  public async sendWinNotification(auctionTitle: string, amount: number) {
+    await this.sendLocalNotification(
       '낙찰 축하',
       `"${auctionTitle}" 경매에서 ${amount.toLocaleString()}원으로 낙찰되었습니다!`,
       { type: 'auction_won', auctionTitle, amount }
@@ -127,27 +70,28 @@ class PushNotificationService {
   }
 
   // 핫한 경매 알림
-  public sendHotAuctionNotification(auctionTitle: string) {
-    this.sendLocalNotification(
+  public async sendHotAuctionNotification(auctionTitle: string) {
+    await this.sendLocalNotification(
       '🔥 핫한 경매 등장',
       `"${auctionTitle}"이 핫한 경매로 선정되었습니다!`,
       { type: 'hot_auction', auctionTitle }
     );
   }
 
-  // 알림 권한 요청
-  public requestPermissions() {
-    PushNotification.requestPermissions();
+  // 알림 권한 요청 (Expo Go에서는 항상 true 반환)
+  public async requestPermissions() {
+    console.log('푸시 알림 권한 요청 (Expo Go 모드 - 항상 허용)');
+    return true;
   }
 
-  // 알림 취소
-  public cancelAllNotifications() {
-    PushNotification.cancelAllLocalNotifications();
+  // 알림 취소 (Expo Go에서는 로그만 출력)
+  public async cancelAllNotifications() {
+    console.log('모든 알림 취소 (Expo Go 모드)');
   }
 
-  // 특정 알림 취소
-  public cancelNotification(id: string) {
-    PushNotification.cancelLocalNotifications({ id });
+  // 특정 알림 취소 (Expo Go에서는 로그만 출력)
+  public async cancelNotification(id: string) {
+    console.log(`알림 취소: ${id} (Expo Go 모드)`);
   }
 }
 

@@ -112,10 +112,10 @@ router.get('/auctions', auth, async (req: AuthRequest, res) => {
             if (img.startsWith('file://')) {
               // 로컬 파일 경로를 웹 접근 가능한 URL로 변환
               const filename = img.split('/').pop();
-              return `http://11.182.185.87:3000/uploads/${filename}`;
+              return `http://192.168.0.36:3000/uploads/${filename}`;
             } else if (img.includes('.jpg') || img.includes('.png') || img.includes('.jpeg')) {
               // 파일명만 있는 경우
-              return `http://11.182.185.87:3000/uploads/${img}`;
+              return `http://192.168.0.36:3000/uploads/${img}`;
             }
             return img;
           });
@@ -180,7 +180,7 @@ router.get('/bids', auth, async (req: AuthRequest, res) => {
             if (img.startsWith('file://')) {
               // 로컬 파일 경로를 웹 접근 가능한 URL로 변환
               const filename = img.split('/').pop();
-              return `http://11.182.185.87:3000/uploads/${filename}`;
+              return `http://192.168.0.36:3000/uploads/${filename}`;
             }
             return img;
           });
@@ -295,7 +295,7 @@ router.get('/auctions/bidding', auth, async (req: AuthRequest, res) => {
             if (img.startsWith('file://')) {
               // 로컬 파일 경로를 웹 접근 가능한 URL로 변환
               const filename = img.split('/').pop();
-              return `http://11.182.185.87:3000/uploads/${filename}`;
+              return `http://192.168.0.36:3000/uploads/${filename}`;
             }
             return img;
           });
@@ -360,7 +360,7 @@ router.get('/auctions/won', auth, async (req: AuthRequest, res) => {
             if (img.startsWith('file://')) {
               // 로컬 파일 경로를 웹 접근 가능한 URL로 변환
               const filename = img.split('/').pop();
-              return `http://11.182.185.87:3000/uploads/${filename}`;
+              return `http://192.168.0.36:3000/uploads/${filename}`;
             }
             return img;
           });

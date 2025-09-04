@@ -44,12 +44,12 @@ const convertImageUrl = (imageUrl: any): string => {
   // 로컬 파일 경로인 경우 웹 URL로 변환
   if (imageUrl.startsWith('file://')) {
     const filename = imageUrl.split('/').pop();
-    return `http://11.182.185.87:3000/uploads/${filename}`;
+    return `http://192.168.0.36:3000/uploads/${filename}`;
   }
   
   // 파일명만 있는 경우
   if (imageUrl.includes('.jpg') || imageUrl.includes('.png') || imageUrl.includes('.jpeg')) {
-    return `http://11.182.185.87:3000/uploads/${imageUrl}`;
+    return `http://192.168.0.36:3000/uploads/${imageUrl}`;
   }
   
   return imageUrl;
@@ -124,7 +124,7 @@ export default function ProfileScreen() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch('http://11.182.185.87:3000/api/users/profile', {
+      const response = await fetch('http://192.168.0.36:3000/api/users/profile', {
         headers: { 
           'Authorization': `Bearer ${(global as any).token || 'test-token'}`,
           'Content-Type': 'application/json'
@@ -171,7 +171,7 @@ export default function ProfileScreen() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch('http://11.182.185.87:3000/api/users/stats', {
+      const response = await fetch('http://192.168.0.36:3000/api/users/stats', {
         headers: { 
           'Authorization': `Bearer ${(global as any).token || 'test-token'}`,
           'Content-Type': 'application/json'
@@ -224,7 +224,7 @@ export default function ProfileScreen() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch(`http://11.182.185.87:3000/api/users/auctions/${tab}`, {
+      const response = await fetch(`http://192.168.0.36:3000/api/users/auctions/${tab}`, {
         headers: { 
           'Authorization': `Bearer ${(global as any).token || 'test-token'}`,
           'Content-Type': 'application/json'

@@ -49,9 +49,9 @@ export const sendWinNotificationEmail = async (
               
               <h4 style="color: #E65100; margin-bottom: 10px;">입금 계좌 정보:</h4>
               <div style="background-color: white; padding: 15px; border-radius: 5px; border: 1px solid #FFB74D;">
-                <p style="margin: 5px 0; color: #333;"><strong>은행:</strong> 신한은행</p>
-                <p style="margin: 5px 0; color: #333;"><strong>계좌번호:</strong> 110-123-456789</p>
-                <p style="margin: 5px 0; color: #333;"><strong>예금주:</strong> DY Auction</p>
+                <p style="margin: 5px 0; color: #333;"><strong>은행:</strong> 케이뱅크</p>
+                <p style="margin: 5px 0; color: #333;"><strong>계좌번호:</strong> 888-002-618202</p>
+                <p style="margin: 5px 0; color: #333;"><strong>예금주:</strong> 원영서</p>
                 <p style="margin: 5px 0; color: #333;"><strong>입금액:</strong> ₩${finalPrice.toLocaleString()}</p>
               </div>
               
@@ -63,8 +63,8 @@ export const sendWinNotificationEmail = async (
             <div style="margin-top: 25px; padding: 20px; background-color: #E3F2FD; border-radius: 8px; border-left: 4px solid #2196F3;">
               <h4 style="color: #1976D2; margin-top: 0;">📞 문의사항</h4>
               <p style="color: #1976D2; margin-bottom: 5px;">입금 관련 문의사항이 있으시면 아래로 연락주세요:</p>
-              <p style="color: #1976D2; margin: 5px 0;"><strong>이메일:</strong> support@dyauction.com</p>
-              <p style="color: #1976D2; margin: 5px 0;"><strong>전화:</strong> 02-1234-5678</p>
+              <p style="color: #1976D2; margin: 5px 0;"><strong>이메일:</strong> dyauction6@gmail.com/p>
+              <p style="color: #1976D2; margin: 5px 0;"><strong>전화:</strong> 없음</p>
             </div>
             
             <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">

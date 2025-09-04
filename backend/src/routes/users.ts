@@ -372,15 +372,15 @@ router.get('/auctions/:type', auth, async (req: AuthRequest, res) => {
           const images = JSON.parse(auctionWithImages.images);
           if (images && images.length > 0) {
             const firstImage = images[0];
-            if (firstImage.startsWith('http://11.182.185.87:3000/uploads/')) {
+            if (firstImage.startsWith('http://192.168.0.36:3000/uploads/')) {
               // 이미 완전한 URL인 경우
               imageUrl = firstImage;
             } else if (firstImage.startsWith('file://')) {
               const filename = firstImage.split('/').pop();
-              imageUrl = `http://11.182.185.87:3000/uploads/${filename}`;
+              imageUrl = `http://192.168.0.36:3000/uploads/${filename}`;
             } else if (firstImage.includes('.jpg') || firstImage.includes('.png') || firstImage.includes('.jpeg')) {
               // 파일명만 있는 경우
-              imageUrl = `http://11.182.185.87:3000/uploads/${firstImage}`;
+              imageUrl = `http://192.168.0.36:3000/uploads/${firstImage}`;
             } else if (firstImage.startsWith('http')) {
               imageUrl = firstImage;
             }

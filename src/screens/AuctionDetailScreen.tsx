@@ -55,12 +55,12 @@ const convertImageUrl = (imageUrl: any): string => {
   // 로컬 파일 경로인 경우 웹 URL로 변환
   if (imageUrl.startsWith('file://')) {
     const filename = imageUrl.split('/').pop();
-    return `http://11.182.185.87:3000/uploads/${filename}`;
+    return `http://192.168.0.36:3000/uploads/${filename}`;
   }
   
   // 파일명만 있는 경우
   if (imageUrl.includes('.jpg') || imageUrl.includes('.png') || imageUrl.includes('.jpeg')) {
-    return `http://11.182.185.87:3000/uploads/${imageUrl}`;
+    return `http://192.168.0.36:3000/uploads/${imageUrl}`;
   }
   
   return imageUrl;
@@ -143,7 +143,7 @@ export default function AuctionDetailScreen() {
     const interval = setInterval(async () => {
       // 실제 API 호출로 최신 데이터 가져오기
       try {
-        const response = await fetch(`http://11.182.185.87:3000/api/auctions/${auctionId}`);
+        const response = await fetch(`http://192.168.0.36:3000/api/auctions/${auctionId}`);
         if (response.ok) {
           const auctionData = await response.json();
           const bids = auctionData.bids || [];
@@ -210,7 +210,7 @@ export default function AuctionDetailScreen() {
       setLoading(true);
       
       // 실제 API 호출
-      const response = await fetch(`http://11.182.185.87:3000/api/auctions/${auctionId}`);
+      const response = await fetch(`http://192.168.0.36:3000/api/auctions/${auctionId}`);
       
       if (response.ok) {
         const auctionData = await response.json();
@@ -377,7 +377,7 @@ export default function AuctionDetailScreen() {
         return;
       }
 
-      const response = await fetch(`http://11.182.185.87:3000/api/auctions/${auctionId}/bid`, {
+      const response = await fetch(`http://192.168.0.36:3000/api/auctions/${auctionId}/bid`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
