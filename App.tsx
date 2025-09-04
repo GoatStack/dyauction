@@ -1,20 +1,35 @@
+import React, { useEffect } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import AuthNavigator from './src/navigation/AuthNavigator';
+import { initDatabase } from './src/utils/database';
+import PushNotificationService from './src/services/pushNotificationService';
 
 export default function App() {
+  useEffect(() => {
+    // 앱 시작 시 데이터베이스 초기화
+    initDatabase()
+      .then(() => {
+        console.log('Database initialized successfully');
+      })
+      .catch((error) => {
+        console.error('Failed to initialize database:', error);
+      });
+
+    // 푸시 알림 권한 요청
+    PushNotificationService.requestPermissions();
+  }, []);
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <SafeAreaProvider>
+      <PaperProvider>
+        <NavigationContainer>
+          <StatusBar style="auto" />
+          <AuthNavigator />
+        </NavigationContainer>
+      </PaperProvider>
+    </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

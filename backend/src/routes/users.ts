@@ -1,0 +1,525 @@
+import express from 'express';
+import { getDatabase } from '../config/database';
+import { auth, AuthRequest } from '../middleware/auth';
+import bcrypt from 'bcryptjs';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+
+const router = express.Router();
+
+// 이미지 업로드 설정
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(__dirname, '../../uploads/profile-images');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB 제한
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('이미지 파일만 업로드 가능합니다.'));
+    }
+  }
+});
+
+// 프로필 이미지 업로드
+router.post('/upload-profile-image', auth, upload.single('profileImage'), async (req: AuthRequest, res) => {
+  try {
+    console.log('Upload request received:', req.body);
+    console.log('File:', req.file);
+    console.log('User:', req.user);
+
+    if (!req.file) {
+      console.log('No file uploaded');
+      return res.status(400).json({ error: '이미지 파일이 없습니다.' });
+    }
+
+    const userId = req.user?.userId;
+    if (!userId) {
+      console.log('No user ID found');
+      return res.status(401).json({ error: '인증되지 않은 사용자입니다.' });
+    }
+
+    console.log('Processing upload for user:', userId);
+    console.log('File details:', {
+      filename: req.file.filename,
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size
+    });
+
+    // 이미지 URL 생성
+    const imageUrl = `/uploads/profile-images/${req.file.filename}`;
+    
+    // DB에 이미지 경로 저장
+    const db = getDatabase();
+    db.prepare(`
+      UPDATE users SET profile_image = ? WHERE id = ?
+    `).run(imageUrl, userId);
+
+    console.log('Image uploaded successfully:', imageUrl);
+
+    res.json({ 
+      message: '프로필 이미지가 성공적으로 업로드되었습니다.',
+      imageUrl: imageUrl
+    });
+  } catch (error) {
+    console.error('Failed to upload profile image:', error);
+    res.status(500).json({ error: '이미지 업로드에 실패했습니다.' });
+  }
+});
+
+// 사용자 프로필 정보 가져오기
+router.get('/profile', auth, async (req: AuthRequest, res) => {
+  try {
+    const db = getDatabase();
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: '인증되지 않은 사용자입니다.' });
+    }
+
+    const user = db.prepare(`
+      SELECT id, username, email, student_id, verification_status, created_at, user_type, profile_image
+      FROM users 
+      WHERE id = ?
+    `).get(userId) as any;
+
+    if (!user) {
+      return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+    }
+
+    res.json({
+      id: user.id,
+      name: user.username,
+      email: user.email,
+      studentId: user.student_id,
+      verificationStatus: user.verification_status,
+      createdAt: user.created_at,
+      isAdmin: user.user_type === 'admin',
+      profileImage: user.profile_image,
+    });
+  } catch (error) {
+    console.error('Failed to get user profile:', error);
+    res.status(500).json({ error: '프로필 정보를 가져오는데 실패했습니다.' });
+  }
+});
+
+// 사용자 통계 정보 가져오기
+router.get('/stats', auth, async (req: AuthRequest, res) => {
+  try {
+    const db = getDatabase();
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: '인증되지 않은 사용자입니다.' });
+    }
+
+    // 판매한 경매 수
+    const salesCount = db.prepare(`
+      SELECT COUNT(*) as count FROM auctions WHERE seller_id = ?
+    `).get(userId) as any;
+
+    // 입찰한 경매 수
+    const bidsCount = db.prepare(`
+      SELECT COUNT(DISTINCT auction_id) as count FROM bids WHERE bidder_id = ?
+    `).get(userId) as any;
+
+    // 낙찰한 경매 수
+    const winsCount = db.prepare(`
+      SELECT COUNT(*) as count FROM auctions 
+      WHERE status = 'expired' 
+      AND id IN (
+        SELECT auction_id FROM bids 
+        WHERE bidder_id = ? 
+        AND amount = (
+          SELECT MAX(amount) FROM bids WHERE auction_id = auctions.id
+        )
+      )
+    `).get(userId) as any;
+
+    res.json({
+      sales: salesCount.count || 0,
+      bids: bidsCount.count || 0,
+      wins: winsCount.count || 0,
+    });
+  } catch (error) {
+    console.error('Failed to get user stats:', error);
+    res.status(500).json({ error: '통계 정보를 가져오는데 실패했습니다.' });
+  }
+});
+
+// 사용자 프로필 업데이트
+router.put('/profile', auth, async (req: AuthRequest, res) => {
+  try {
+    const db = getDatabase();
+    const userId = req.user?.userId;
+    const { email, currentPassword, newPassword, profileImage } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ error: '인증되지 않은 사용자입니다.' });
+    }
+
+    // 현재 사용자 정보 가져오기
+    const currentUser = db.prepare(`
+      SELECT email, password FROM users WHERE id = ?
+    `).get(userId) as any;
+
+    if (!currentUser) {
+      return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+    }
+
+    // 비밀번호 변경이 요청된 경우 현재 비밀번호 확인
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ error: '현재 비밀번호를 입력해주세요.' });
+      }
+
+      const isValidPassword = await bcrypt.compare(currentPassword, currentUser.password);
+      if (!isValidPassword) {
+        return res.status(400).json({ error: '현재 비밀번호가 올바르지 않습니다.' });
+      }
+    }
+
+    // 업데이트할 데이터 준비 (이름과 학번은 변경 불가)
+    const updateData: any = {};
+    if (email && email !== currentUser.email) updateData.email = email;
+
+    // 비밀번호 변경
+    if (newPassword) {
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      updateData.password = hashedPassword;
+    }
+
+    // 프로필 이미지 업데이트
+    if (profileImage) {
+      updateData.profile_image = profileImage;
+    }
+
+    // 업데이트 실행
+    if (Object.keys(updateData).length > 0) {
+      const setClause = Object.keys(updateData).map(key => `${key} = ?`).join(', ');
+      const values = Object.values(updateData);
+      values.push(userId);
+
+      db.prepare(`
+        UPDATE users SET ${setClause} WHERE id = ?
+      `).run(...values);
+    }
+
+    res.json({ message: '프로필이 성공적으로 업데이트되었습니다.' });
+  } catch (error) {
+    console.error('Failed to update user profile:', error);
+    res.status(500).json({ error: '프로필 업데이트에 실패했습니다.' });
+  }
+});
+
+// 비밀번호 변경
+router.post('/change-password', auth, async (req: AuthRequest, res) => {
+  try {
+    const db = getDatabase();
+    const userId = req.user?.userId;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ error: '인증되지 않은 사용자입니다.' });
+    }
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: '현재 비밀번호와 새 비밀번호를 모두 입력해주세요.' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: '새 비밀번호는 최소 6자 이상이어야 합니다.' });
+    }
+
+    // 현재 사용자 정보 가져오기
+    const currentUser = db.prepare(`
+      SELECT password FROM users WHERE id = ?
+    `).get(userId) as any;
+
+    if (!currentUser) {
+      return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+    }
+
+    // 현재 비밀번호 확인
+    const isValidPassword = await bcrypt.compare(currentPassword, currentUser.password);
+    if (!isValidPassword) {
+      return res.status(400).json({ error: '현재 비밀번호가 올바르지 않습니다.' });
+    }
+
+    // 새 비밀번호 해시화
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // 비밀번호 업데이트
+    db.prepare(`
+      UPDATE users SET password = ? WHERE id = ?
+    `).run(hashedPassword, userId);
+
+    res.json({ message: '비밀번호가 성공적으로 변경되었습니다.' });
+  } catch (error) {
+    console.error('Failed to change password:', error);
+    res.status(500).json({ error: '비밀번호 변경에 실패했습니다.' });
+  }
+});
+
+// 사용자 경매 내역 가져오기
+router.get('/auctions/:type', auth, async (req: AuthRequest, res) => {
+  try {
+    const db = getDatabase();
+    const userId = req.user?.userId;
+    const { type } = req.params;
+
+    if (!userId) {
+      return res.status(401).json({ error: '인증되지 않은 사용자입니다.' });
+    }
+
+    let auctions: any[] = [];
+
+    if (type === 'selling') {
+      // 판매중인 경매
+      auctions = db.prepare(`
+        SELECT 
+          a.id,
+          a.title,
+          a.description,
+          a.starting_price as startingPrice,
+          a.current_price as currentPrice,
+          a.end_time as endTime,
+          a.status,
+          a.created_at as createdAt,
+          COUNT(b.id) as bidCount
+        FROM auctions a
+        LEFT JOIN bids b ON a.id = b.auction_id
+        WHERE a.seller_id = ? AND a.status = 'active'
+        GROUP BY a.id
+        ORDER BY a.created_at DESC
+      `).all(userId);
+    } else if (type === 'bidding') {
+      // 입찰한 경매
+      auctions = db.prepare(`
+        SELECT DISTINCT
+          a.id,
+          a.title,
+          a.description,
+          a.starting_price as startingPrice,
+          a.current_price as currentPrice,
+          a.end_time as endTime,
+          a.status,
+          a.created_at as createdAt,
+          COUNT(b2.id) as bidCount
+        FROM auctions a
+        JOIN bids b ON a.id = b.auction_id
+        LEFT JOIN bids b2 ON a.id = b2.auction_id
+        WHERE b.bidder_id = ? AND a.status = 'active'
+        GROUP BY a.id
+        ORDER BY a.created_at DESC
+      `).all(userId);
+    } else if (type === 'won') {
+      // 낙찰한 경매
+      auctions = db.prepare(`
+        SELECT 
+          a.id,
+          a.title,
+          a.description,
+          a.starting_price as startingPrice,
+          a.current_price as currentPrice,
+          a.end_time as endTime,
+          a.status,
+          a.created_at as createdAt,
+          COUNT(b.id) as bidCount
+        FROM auctions a
+        LEFT JOIN bids b ON a.id = b.auction_id
+        WHERE a.status = 'expired' 
+        AND a.id IN (
+          SELECT auction_id FROM bids 
+          WHERE bidder_id = ? 
+          AND amount = (
+            SELECT MAX(amount) FROM bids WHERE auction_id = a.id
+          )
+        )
+        GROUP BY a.id
+        ORDER BY a.created_at DESC
+      `).all(userId);
+    }
+
+    // 응답 데이터 형식 맞추기
+    const formattedAuctions = auctions.map((auction: any) => {
+      // 실제 이미지 URL 가져오기
+      const auctionWithImages = db.prepare(`
+        SELECT images FROM auctions WHERE id = ?
+      `).get(auction.id) as any;
+      
+      let imageUrl = 'https://via.placeholder.com/400x300/cccccc/666666?text=이미지+없음';
+      
+      if (auctionWithImages && auctionWithImages.images) {
+        try {
+          const images = JSON.parse(auctionWithImages.images);
+          if (images && images.length > 0) {
+            const firstImage = images[0];
+            if (firstImage.startsWith('http://11.182.185.87:3000/uploads/')) {
+              // 이미 완전한 URL인 경우
+              imageUrl = firstImage;
+            } else if (firstImage.startsWith('file://')) {
+              const filename = firstImage.split('/').pop();
+              imageUrl = `http://11.182.185.87:3000/uploads/${filename}`;
+            } else if (firstImage.includes('.jpg') || firstImage.includes('.png') || firstImage.includes('.jpeg')) {
+              // 파일명만 있는 경우
+              imageUrl = `http://11.182.185.87:3000/uploads/${firstImage}`;
+            } else if (firstImage.startsWith('http')) {
+              imageUrl = firstImage;
+            }
+          }
+        } catch (error) {
+          console.error('이미지 파싱 오류:', error);
+        }
+      }
+      
+      return {
+        id: auction.id,
+        title: auction.title,
+        description: auction.description,
+        startingPrice: auction.startingPrice,
+        currentPrice: auction.currentPrice,
+        endTime: auction.endTime,
+        status: auction.status,
+        createdAt: auction.createdAt,
+        imageUrl: imageUrl,
+        sellerId: userId,
+        sellerName: req.user?.username || '사용자',
+        bids: [],
+        participants: auction.bidCount || 0,
+      };
+    });
+
+    res.json(formattedAuctions);
+  } catch (error) {
+    console.error('Failed to get user auctions:', error);
+    res.status(500).json({ error: '경매 내역을 가져오는데 실패했습니다.' });
+  }
+});
+
+// 모든 사용자 목록 가져오기 (관리자용)
+router.get('/', auth, async (req: AuthRequest, res) => {
+  try {
+    const db = getDatabase();
+    
+    // 관리자 권한 확인
+    const user = db.prepare('SELECT user_type FROM users WHERE id = ?').get(req.user?.userId) as { user_type: string } | undefined;
+    
+    if (!user || user.user_type !== 'admin') {
+      return res.status(403).json({ error: '관리자 권한이 필요합니다.' });
+    }
+    
+    const users = db.prepare(`
+      SELECT 
+        id, 
+        username, 
+        email, 
+        username as name, 
+        student_id, 
+        user_type, 
+        approval_status, 
+        created_at,
+        profile_image
+      FROM users 
+      ORDER BY created_at DESC
+    `).all();
+    
+    res.json(users);
+  } catch (error) {
+    console.error('Failed to get users:', error);
+    res.status(500).json({ error: '사용자 목록을 가져오는데 실패했습니다.' });
+  }
+});
+
+// 특정 사용자 상세 정보 가져오기 (관리자용)
+router.get('/:id', auth, async (req: AuthRequest, res) => {
+  try {
+    const db = getDatabase();
+    const userId = req.params.id;
+    
+    // 관리자 권한 확인
+    const adminUser = db.prepare('SELECT user_type FROM users WHERE id = ?').get(req.user?.userId) as { user_type: string } | undefined;
+    
+    if (!adminUser || adminUser.user_type !== 'admin') {
+      return res.status(403).json({ error: '관리자 권한이 필요합니다.' });
+    }
+    
+    const user = db.prepare(`
+      SELECT 
+        id, 
+        username, 
+        email, 
+        username as name, 
+        student_id, 
+        user_type, 
+        approval_status, 
+        created_at,
+        profile_image,
+        id_card_image
+      FROM users 
+      WHERE id = ?
+    `).get(userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+    }
+    
+    res.json(user);
+  } catch (error) {
+    console.error('Failed to get user details:', error);
+    res.status(500).json({ error: '사용자 상세 정보를 가져오는데 실패했습니다.' });
+  }
+});
+
+// 사용자 승인 상태 변경 API
+router.put('/:id/status', auth, async (req: AuthRequest, res) => {
+  try {
+    const db = getDatabase();
+    const userId = req.params.id;
+    const { approval_status } = req.body;
+    
+    // 관리자 권한 확인
+    const adminUser = db.prepare('SELECT user_type FROM users WHERE id = ?').get(req.user?.userId) as { user_type: string } | undefined;
+    
+    if (!adminUser || adminUser.user_type !== 'admin') {
+      return res.status(403).json({ error: '관리자 권한이 필요합니다.' });
+    }
+    
+    // 사용자 존재 확인
+    const user = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
+    if (!user) {
+      return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+    }
+    
+    // 승인 상태 업데이트
+    const stmt = db.prepare('UPDATE users SET approval_status = ? WHERE id = ?');
+    stmt.run(approval_status, userId);
+    
+    res.json({ 
+      message: '사용자 승인 상태가 변경되었습니다.',
+      approval_status: approval_status
+    });
+  } catch (error) {
+    console.error('Failed to update user status:', error);
+    res.status(500).json({ error: '사용자 상태 변경에 실패했습니다.' });
+  }
+});
+
+export default router;

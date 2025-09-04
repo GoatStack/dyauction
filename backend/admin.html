@@ -1,0 +1,2009 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DyAuction 관리자</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: #fff;
+            border-right: 1px solid #e9ecef;
+            padding: 20px 0;
+        }
+        
+        .sidebar h1 {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid #e9ecef;
+            color: #495057;
+            font-size: 18px;
+        }
+        
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .nav-menu li {
+            margin: 0;
+        }
+        
+        .nav-menu a {
+            display: block;
+            padding: 15px 20px;
+            color: #6c757d;
+            text-decoration: none;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .nav-menu a:hover,
+        .nav-menu a.active {
+            background: #f8f9fa;
+            color: #495057;
+            border-left-color: #007bff;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            background: #fff;
+            margin: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .section {
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        .section h2 {
+            margin-bottom: 25px;
+            color: #495057;
+            font-size: 24px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* 통계 카드 스타일 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        /* 대시보드 로그 스타일 */
+        .dashboard-logs {
+            margin-top: 30px;
+        }
+        
+        .dashboard-logs h3 {
+            color: #495057;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        /* 테이블 스타일 */
+        .table-container {
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        
+        /* 사용자 관리 섹션 스타일 */
+        .user-section {
+            margin-bottom: 40px;
+        }
+        
+        .user-section h3 {
+            color: #495057;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .image-preview {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .image-preview:hover {
+            transform: scale(1.1);
+        }
+        
+        .no-image {
+            width: 60px;
+            height: 60px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        /* 모달 이미지 스타일 */
+        .user-images {
+            margin-top: 30px;
+        }
+        
+        .image-section {
+            margin-bottom: 25px;
+        }
+        
+        .image-section h4 {
+            color: #495057;
+            font-size: 16px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .modal-image-container {
+            text-align: center;
+        }
+        
+        .modal-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* 사용자 상세 보기 팝업 스타일 */
+        .user-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .user-detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .user-detail-item.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .user-detail-item label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .user-detail-item span {
+            color: #6c757d;
+            font-size: 16px;
+            padding: 8px 0;
+        }
+        
+        .id-card-image {
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .id-card-image img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .user-detail-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        /* 경매 상세 보기 스타일 */
+        .auction-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .auction-detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .auction-detail-item.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .auction-detail-item label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .auction-detail-item span {
+            color: #6c757d;
+            font-size: 16px;
+            padding: 8px 0;
+        }
+        
+        .auction-description {
+            margin-top: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            color: #495057;
+            line-height: 1.6;
+            min-height: 80px;
+        }
+        
+        .auction-images {
+            margin-top: 10px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .auction-images img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* 로그 컨트롤 스타일 */
+        .log-controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+        
+        .log-controls select,
+        .log-controls input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .log-controls select {
+            min-width: 120px;
+        }
+        
+        .log-controls input {
+            width: 80px;
+        }
+        
+        /* 액션 배지 스타일 */
+        .action-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+            min-width: 60px;
+            display: inline-block;
+        }
+        
+        .action-created {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .action-approved {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .action-rejected {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .action-bid_placed {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .action-ended {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        .action-delayed_end {
+            background-color: #e0f2f1;
+            color: #00695c;
+        }
+        
+        .action-updated {
+            background-color: #f1f8e9;
+            color: #558b2f;
+        }
+        
+        /* 로그 상세 정보 스타일 */
+        .log-details {
+            max-width: 300px;
+            word-wrap: break-word;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .auction-detail-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        /* 모달 기본 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            overflow: auto;
+        }
+        
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid #e9ecef;
+            background: #f8f9fa;
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: #000;
+        }
+        
+        .modal-body {
+            padding: 25px;
+        }
+        
+        .modal-no-image {
+            width: 200px;
+            height: 150px;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 14px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 사이드바 -->
+        <div class="sidebar">
+            <h1>DyAuction 관리자</h1>
+            <ul class="nav-menu">
+                <li><a href="#" class="nav-link active" data-section="dashboard">대시보드</a></li>
+                <li><a href="#" class="nav-link" data-section="users">사용자 관리</a></li>
+                <li><a href="#" class="nav-link" data-section="auctions">경매 관리</a></li>
+                <li><a href="#" class="nav-link" data-section="pending">승인 대기</a></li>
+                <li><a href="#" class="nav-link" data-section="logs">경매 로그</a></li>
+                <li><a href="#" class="nav-link" data-section="createUser">새 사용자</a></li>
+                <li><a href="#" class="nav-link" onclick="logout()">로그아웃</a></li>
+            </ul>
+        </div>
+
+        <!-- 메인 콘텐츠 -->
+        <div class="main-content">
+            <!-- 대시보드 섹션 -->
+            <div id="dashboardSection" class="section active">
+                <h2>대시보드</h2>
+                <div id="statsGrid">
+                    <!-- 통계 카드들이 여기에 로드됩니다 -->
+                </div>
+                
+                <!-- 최근 활동 로그 -->
+                <div class="dashboard-logs">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>최근 활동</h3>
+                        <button onclick="refreshDashboardLogs()" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">새로고침</button>
+            </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>시간</th>
+                                    <th>경매 ID</th>
+                                    <th>경매명</th>
+                                    <th>사용자</th>
+                                    <th>액션</th>
+                                    <th>상세 정보</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboardLogsTableBody">
+                                <!-- 최근 로그 목록이 여기에 로드됩니다 -->
+                            </tbody>
+                        </table>
+            </div>
+            </div>
+            </div>
+            
+            <!-- 사용자 관리 섹션 -->
+            <div id="usersSection" class="section">
+                <h2>사용자 관리</h2>
+                <div id="usersAlert" class="alert"></div>
+                
+                <!-- 승인 대기 사용자 -->
+                <div class="user-section">
+                    <h3>승인 대기 사용자</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>이름</th>
+                                    <th>이메일</th>
+                                    <th>학번</th>
+                                    <th>사용자 타입</th>
+                                    <th>신분증</th>
+                                    <th>작업</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pendingUsersTableBody">
+                                <!-- 승인 대기 사용자 목록이 여기에 로드됩니다 -->
+                            </tbody>
+                        </table>
+            </div>
+        </div>
+
+                <!-- 승인된 사용자 -->
+                <div class="user-section">
+                    <h3>승인된 사용자</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>이름</th>
+                                    <th>이메일</th>
+                                    <th>학번</th>
+                                    <th>사용자 타입</th>
+                                    <th>프로필 이미지</th>
+                                    <th>작업</th>
+                                </tr>
+                            </thead>
+                            <tbody id="approvedUsersTableBody">
+                                <!-- 승인된 사용자 목록이 여기에 로드됩니다 -->
+                            </tbody>
+                        </table>
+                </div>
+                </div>
+                </div>
+            
+            <!-- 사용자 상세 보기 팝업 -->
+            <div id="userDetailModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>사용자 상세 정보</h3>
+                        <span class="close" onclick="closeUserDetailModal()">&times;</span>
+                </div>
+                    <div class="modal-body">
+                        <div class="user-detail-grid">
+                            <div class="user-detail-item">
+                                <label>사용자 ID:</label>
+                                <span id="detailUserId"></span>
+                </div>
+                            <div class="user-detail-item">
+                                <label>이름:</label>
+                                <span id="detailUsername"></span>
+                            </div>
+                            <div class="user-detail-item">
+                                <label>이메일:</label>
+                                <span id="detailEmail"></span>
+                            </div>
+                            <div class="user-detail-item">
+                                <label>학번:</label>
+                                <span id="detailStudentId"></span>
+                            </div>
+                            <div class="user-detail-item">
+                                <label>사용자 타입:</label>
+                                <span id="detailUserType"></span>
+                            </div>
+                            <div class="user-detail-item">
+                                <label>승인 상태:</label>
+                                <span id="detailUserApprovalStatus"></span>
+                            </div>
+                            <div class="user-detail-item">
+                                <label>가입일:</label>
+                                <span id="detailCreatedAt"></span>
+                            </div>
+                            <div class="user-detail-item full-width">
+                                <label>신분증 사진:</label>
+                                <div id="detailIdCardImage" class="id-card-image"></div>
+                            </div>
+        </div>
+
+                        <div class="user-detail-actions">
+                            <div id="pendingUserActions" style="display: none;">
+                                <button onclick="approveUser()" class="btn btn-success">승인</button>
+                                <button onclick="rejectUser()" class="btn btn-danger">거부</button>
+            </div>
+                            <div id="approvedUserActions" style="display: none;">
+                                <button onclick="toggleUserStatus()" class="btn btn-warning">상태 변경</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 경매 상세 보기 팝업 -->
+            <div id="auctionDetailModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>경매 상세 정보</h3>
+                        <span class="close" onclick="closeAuctionDetailModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <div class="auction-detail-grid">
+                            <div class="auction-detail-item">
+                                <label>경매 ID:</label>
+                                <span id="detailAuctionId"></span>
+                            </div>
+                            <div class="auction-detail-item">
+                                <label>제목:</label>
+                                <span id="detailAuctionTitle"></span>
+                            </div>
+                            <div class="auction-detail-item">
+                                <label>카테고리:</label>
+                                <span id="detailAuctionCategory"></span>
+                            </div>
+                            <div class="auction-detail-item">
+                                <label>시작가:</label>
+                                <span id="detailAuctionStartingPrice"></span>
+                            </div>
+                            <div class="auction-detail-item">
+                                <label>현재가:</label>
+                                <span id="detailAuctionCurrentPrice"></span>
+                            </div>
+                            <div class="auction-detail-item">
+                                <label>판매자:</label>
+                                <span id="detailAuctionSeller"></span>
+                            </div>
+                            <div class="auction-detail-item">
+                                <label>상태:</label>
+                                <span id="detailAuctionStatus"></span>
+                            </div>
+                                                    <div class="auction-detail-item">
+                            <label>등록일:</label>
+                            <span id="detailAuctionCreatedAt"></span>
+                        </div>
+                        <div class="auction-detail-item">
+                            <label>시작일:</label>
+                            <span id="detailAuctionStartTime"></span>
+                        </div>
+                        <div class="auction-detail-item">
+                            <label>종료일:</label>
+                            <span id="detailAuctionEndTime"></span>
+                        </div>
+                        <div class="auction-detail-item">
+                            <label>남은 시간:</label>
+                            <span id="detailAuctionTimeLeft"></span>
+                        </div>
+                        <div class="auction-detail-item full-width">
+                            <label>상품 설명:</label>
+                            <div id="detailAuctionDescription" class="auction-description"></div>
+                        </div>
+                            <div class="auction-detail-item full-width">
+                                <label>경매 이미지:</label>
+                                <div id="detailAuctionImages" class="auction-images"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="auction-detail-actions">
+                            <div id="pendingAuctionActions" style="display: none;">
+                                <button onclick="approveAuction()" class="btn btn-success">승인</button>
+                                <button onclick="rejectAuction()" class="btn btn-danger">거부</button>
+                            </div>
+                            <div id="activeAuctionActions" style="display: none;">
+                                <button onclick="endAuction()" class="btn btn-warning">경매 종료</button>
+                                <button onclick="showDelayEndModal()" class="btn btn-info">지연 종료</button>
+                                <button onclick="toggleHotAuction()" class="btn btn-primary" id="hotAuctionBtn">핫한 경매로 설정</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 경매 관리 섹션 -->
+            <div id="auctionsSection" class="section">
+                <h2>경매 관리</h2>
+                <div id="auctionsAlert" class="alert"></div>
+                <div class="table-container">
+                    <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                                <th>제목</th>
+                                <th>카테고리</th>
+                                <th>현재가</th>
+                                <th>판매자</th>
+                        <th>상태</th>
+                        <th>등록일</th>
+                        <th>작업</th>
+                    </tr>
+                </thead>
+                        <tbody id="auctionsTableBody">
+                            <!-- 활성 경매 목록이 여기에 로드됩니다 -->
+                </tbody>
+            </table>
+                </div>
+            </div>
+            
+            <!-- 승인 대기 섹션 -->
+            <div id="pendingSection" class="section">
+                <h2>승인 대기 경매</h2>
+                <div id="pendingAlert" class="alert"></div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>제목</th>
+                                <th>카테고리</th>
+                                <th>시작가</th>
+                                <th>판매자</th>
+                                <th>등록일</th>
+                                <th>작업</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pendingTableBody">
+                            <!-- 승인 대기 경매 목록이 여기에 로드됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- 경매 로그 섹션 -->
+            <div id="logsSection" class="section">
+                <h2>경매 로그</h2>
+                <div class="log-controls">
+                    <select id="logFilter" onchange="loadLogs()">
+                        <option value="">전체 로그</option>
+                        <option value="created">경매 생성</option>
+                        <option value="approved">경매 승인</option>
+                        <option value="rejected">경매 거부</option>
+                        <option value="bid_placed">입찰</option>
+                        <option value="ended">경매 종료</option>
+                        <option value="delayed_end">지연 종료</option>
+                    </select>
+                    <input type="number" id="logLimit" value="50" min="10" max="500" onchange="loadLogs()" placeholder="표시 개수">
+                    <button onclick="loadLogs()" class="btn btn-primary">새로고침</button>
+                </div>
+                <div id="logsAlert" class="alert"></div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>시간</th>
+                                <th>경매 ID</th>
+                                <th>경매명</th>
+                                <th>사용자</th>
+                                <th>액션</th>
+                                <th>상세 정보</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsTableBody">
+                            <!-- 로그 목록이 여기에 로드됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- 새 사용자 생성 섹션 -->
+            <div id="createUserSection" class="section">
+                <h2>새 사용자 생성</h2>
+                <form onsubmit="createUser(event)">
+                    <div class="form-group">
+                        <label for="newUsername">사용자명</label>
+                        <input type="text" id="newUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newEmail">이메일</label>
+                        <input type="email" id="newEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newName">이름</label>
+                        <input type="text" id="newName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newStudentId">학번</label>
+                        <input type="text" id="newStudentId" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">비밀번호</label>
+                        <input type="password" id="newPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newUserType">사용자 타입</label>
+                        <select id="newUserType" required>
+                            <option value="user">일반 사용자</option>
+                            <option value="admin">관리자</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">사용자 생성</button>
+                </form>
+                <div id="createUserAlert" class="alert"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 경매 지연 종료 모달 -->
+    <div id="delayEndModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>경매 지연 종료</h3>
+                <span class="close" onclick="closeDelayEndModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="delayMinutes">지연 시간 (분)</label>
+                    <input type="number" id="delayMinutes" min="1" max="1440" value="5" class="form-control">
+                    <small class="form-text">1분 ~ 24시간(1440분) 사이의 값을 입력하세요.</small>
+                </div>
+                <div class="modal-actions">
+                    <button onclick="confirmDelayEnd()" class="btn btn-primary">확인</button>
+                    <button onclick="closeDelayEndModal()" class="btn btn-secondary">취소</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = localStorage.getItem('adminToken');
+        let currentUserId = null;
+
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            // 토큰이 없으면 로그인 페이지로 리다이렉트
+            if (!authToken) {
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            // 토큰 유효성 검증
+            validateToken();
+            
+            // 모달 외부 클릭 시 닫기
+            window.addEventListener('click', function(event) {
+                const userModal = document.getElementById('userDetailModal');
+                const auctionModal = document.getElementById('auctionDetailModal');
+                
+                if (event.target === userModal) {
+                    closeUserDetailModal();
+                }
+                
+                if (event.target === auctionModal) {
+                    closeAuctionDetailModal();
+                }
+            });
+        });
+        
+        // 토큰 유효성 검증
+        async function validateToken() {
+            try {
+                console.log('🔍 토큰 검증 시작:', authToken ? '토큰 존재' : '토큰 없음');
+                
+                const response = await fetch('/api/users', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                console.log('📡 API 응답 상태:', response.status, response.ok);
+                
+                if (!response.ok) {
+                    console.log('❌ 토큰이 유효하지 않음, 로그인 페이지로 리다이렉트');
+                    // 토큰이 유효하지 않으면 로그인 페이지로 리다이렉트
+                    localStorage.removeItem('adminToken');
+                    localStorage.removeItem('adminUser');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                console.log('✅ 토큰 검증 성공, 대시보드 표시');
+                // 토큰이 유효하면 대시보드 표시
+                showSection('dashboard');
+                
+            } catch (error) {
+                console.error('🚨 토큰 검증 오류:', error);
+                // 에러 발생 시 로그인 페이지로 리다이렉트
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminUser');
+                window.location.href = '/login.html';
+            }
+        }
+        
+        // 네비게이션 메뉴 클릭 이벤트
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // 모든 링크에서 active 클래스 제거
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                
+                // 클릭된 링크에 active 클래스 추가
+                this.classList.add('active');
+                
+                // 해당 섹션 표시
+                const section = this.getAttribute('data-section');
+                if (section) {
+                    showSection(section);
+                }
+            });
+        });
+        
+        // 섹션 표시 함수
+        function showSection(sectionName) {
+            // 모든 섹션 숨기기
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // 선택된 섹션만 표시
+            const targetSection = document.getElementById(sectionName + 'Section');
+            if (targetSection) {
+                targetSection.classList.add('active');
+                
+                // 섹션별 데이터 로드 및 자동 새로고침 제어
+                switch(sectionName) {
+                    case 'dashboard':
+                        loadStats();
+                        startDashboardAutoRefresh(); // 대시보드에서 자동 새로고침 시작
+                        break;
+                    case 'users':
+                        stopDashboardAutoRefresh(); // 다른 섹션에서는 자동 새로고침 중지
+                        loadUsers();
+                        break;
+                    case 'auctions':
+                        stopDashboardAutoRefresh();
+                        loadAuctions();
+                        break;
+                    case 'pending':
+                        stopDashboardAutoRefresh();
+                        loadPendingAuctions();
+                        break;
+                    case 'logs':
+                        stopDashboardAutoRefresh();
+                        loadLogs();
+                        break;
+                    default:
+                        stopDashboardAutoRefresh();
+                        break;
+                }
+            }
+        }
+        
+        // 로그아웃 함수
+        function logout() {
+            // 자동 새로고침 중지
+            stopDashboardAutoRefresh();
+            
+            authToken = null;
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminUser');
+            
+            // 로그인 페이지로 리다이렉트
+            window.location.href = '/login.html';
+        }
+        
+        // 페이지 언로드 시 자동 새로고침 정리
+        window.addEventListener('beforeunload', function() {
+            stopDashboardAutoRefresh();
+        });
+        
+        // 알림 표시
+        function showAlert(alertId, message, type) {
+            const alert = document.getElementById(alertId);
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 3000);
+        }
+        
+        // 통계 로드
+        async function loadStats() {
+            try {
+                const [usersResponse, auctionsResponse, pendingResponse, logsResponse] = await Promise.all([
+                    fetch('/api/users', {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    }),
+                    fetch('/api/auctions', {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    }),
+                    fetch('/api/auctions/admin/pending', {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    }),
+                    fetch('/api/auctions/admin/logs?limit=10', {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    })
+                ]);
+                
+                const usersData = await usersResponse.json();
+                const auctionsData = await auctionsResponse.json();
+                const pendingData = await pendingResponse.json();
+                const logsData = await logsResponse.json();
+                
+                const statsGrid = document.getElementById('statsGrid');
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-number">${usersData.length}</div>
+                        <div class="stat-label">전체 사용자</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${auctionsData.length}</div>
+                        <div class="stat-label">전체 경매</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${pendingData.length}</div>
+                        <div class="stat-label">승인 대기</div>
+                    </div>
+                `;
+                
+                // 대시보드 로그 로드
+                loadDashboardLogs(logsData.logs);
+            } catch (error) {
+                console.error('통계 로드 오류:', error);
+                document.getElementById('statsGrid').innerHTML = '<p>통계를 불러올 수 없습니다.</p>';
+            }
+        }
+        
+        // 대시보드 로그 로드
+        function loadDashboardLogs(logs) {
+            const tbody = document.getElementById('dashboardLogsTableBody');
+            
+            if (!logs || logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">최근 활동이 없습니다.</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = logs.map(log => {
+                const details = log.details ? JSON.parse(log.details) : {};
+                let detailsText = '';
+                
+                switch(log.action) {
+                    case 'created':
+                        detailsText = `제목: ${details.title}, 카테고리: ${details.category}, 시작가: ${details.startingPrice}원`;
+                        break;
+                    case 'approved':
+                        detailsText = `시작: ${new Date(details.startTime).toLocaleString()}, 종료: ${new Date(details.endTime).toLocaleString()}`;
+                        break;
+                    case 'bid_placed':
+                        detailsText = `입찰가: ${details.amount}원 (이전: ${details.previousPrice}원)`;
+                        break;
+                    case 'ended':
+                        detailsText = `최종가: ${details.finalPrice}원, 사유: ${details.reason}`;
+                        break;
+                    case 'delayed_end':
+                        detailsText = `${details.delayMinutes}분 지연, 새 종료시간: ${new Date(details.newEndTime).toLocaleString()}`;
+                        break;
+                    default:
+                        detailsText = JSON.stringify(details);
+                }
+                
+                return `
+                    <tr>
+                        <td>${new Date(log.timestamp).toLocaleString('ko-KR')}</td>
+                        <td>${log.auction_id || '-'}</td>
+                        <td>${log.auction_title || '-'}</td>
+                        <td>${log.username || '-'}</td>
+                        <td><span class="action-badge action-${log.action}">${getActionText(log.action)}</span></td>
+                        <td class="log-details">${detailsText}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // 대시보드 로그 새로고침
+        async function refreshDashboardLogs() {
+            try {
+                const response = await fetch('/api/auctions/admin/logs?limit=10', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    loadDashboardLogs(data.logs);
+                } else {
+                    console.error('대시보드 로그 새로고침 실패');
+                }
+            } catch (error) {
+                console.error('대시보드 로그 새로고침 오류:', error);
+            }
+        }
+        
+        // 자동 새로고침 (30초마다)
+        let dashboardRefreshInterval;
+        
+        function startDashboardAutoRefresh() {
+            // 기존 인터벌이 있으면 제거
+            if (dashboardRefreshInterval) {
+                clearInterval(dashboardRefreshInterval);
+            }
+            
+            // 30초마다 대시보드 로그 새로고침
+            dashboardRefreshInterval = setInterval(() => {
+                const dashboardSection = document.getElementById('dashboardSection');
+                if (dashboardSection && dashboardSection.classList.contains('active')) {
+                    refreshDashboardLogs();
+                }
+            }, 30000); // 30초
+        }
+        
+        function stopDashboardAutoRefresh() {
+            if (dashboardRefreshInterval) {
+                clearInterval(dashboardRefreshInterval);
+                dashboardRefreshInterval = null;
+            }
+        }
+        
+        // 사용자 목록 로드
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/users', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const users = await response.json();
+                
+                // 승인 대기 사용자와 승인된 사용자 분리
+                const pendingUsers = users.filter(user => user.approval_status === 'pending');
+                const approvedUsers = users.filter(user => user.approval_status === 'approved');
+                
+                // 승인 대기 사용자 테이블
+                const pendingTbody = document.getElementById('pendingUsersTableBody');
+                if (pendingUsers.length === 0) {
+                    pendingTbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px;">승인 대기 중인 사용자가 없습니다.</td></tr>';
+                } else {
+                    pendingTbody.innerHTML = pendingUsers.map(user => `
+                        <tr>
+                            <td>${user.id}</td>
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                            <td>${user.student_id}</td>
+                            <td>${getUserTypeText(user.user_type)}</td>
+                            <td>
+                                ${user.id_card_image ? 
+                                    `<img src="${user.id_card_image}" alt="신분증" class="image-preview" onclick="viewUserDetails(${user.id})">` :
+                                    `<div class="no-image">신분증<br>없음</div>`
+                                }
+                            </td>
+                            <td>
+                                <button class="btn btn-secondary" onclick="showUserDetail(${user.id})">상세보기</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+                
+                // 승인된 사용자 테이블
+                const approvedTbody = document.getElementById('approvedUsersTableBody');
+                if (approvedUsers.length === 0) {
+                    approvedTbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px;">승인된 사용자가 없습니다.</td></tr>';
+                } else {
+                    approvedTbody.innerHTML = approvedUsers.map(user => `
+                        <tr>
+                            <td>${user.id}</td>
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                            <td>${user.student_id}</td>
+                            <td>${getUserTypeText(user.user_type)}</td>
+                            <td>
+                                ${user.profile_image ? 
+                                    `<img src="${user.profile_image}" alt="프로필" class="image-preview" onclick="viewUserDetails(${user.id})">` :
+                                    `<div class="no-image">프로필<br>없음</div>`
+                                }
+                            </td>
+                            <td>
+                                <button class="btn btn-secondary" onclick="showUserDetail(${user.id})">상세보기</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                showAlert('usersAlert', '사용자 목록을 불러오는 중 오류가 발생했습니다.', 'error');
+            }
+        }
+        
+        // 사용자 상세 보기 표시
+        async function showUserDetail(userId) {
+            try {
+                const response = await fetch(`/api/users/${userId}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const user = await response.json();
+                    
+                    // 팝업에 사용자 정보 표시
+                    document.getElementById('detailUserId').textContent = user.id;
+                    document.getElementById('detailUsername').textContent = user.username || user.name || 'N/A';
+                    document.getElementById('detailEmail').textContent = user.email;
+                    document.getElementById('detailStudentId').textContent = user.student_id || 'N/A';
+                    document.getElementById('detailUserType').textContent = getUserTypeText(user.user_type);
+                    document.getElementById('detailUserApprovalStatus').textContent = getApprovalStatusText(user.approval_status);
+                    document.getElementById('detailCreatedAt').textContent = new Date(user.created_at).toLocaleDateString();
+                    
+                    // 신분증 사진 표시
+                    const idCardImageDiv = document.getElementById('detailIdCardImage');
+                    if (user.id_card_image) {
+                        idCardImageDiv.innerHTML = `<img src="${user.id_card_image}" alt="신분증 사진">`;
+                    } else {
+                        idCardImageDiv.innerHTML = '<div class="no-image">신분증 사진이 없습니다</div>';
+                    }
+                    
+                    // 승인 상태에 따라 액션 버튼 표시
+                    if (user.approval_status === 'pending') {
+                        document.getElementById('pendingUserActions').style.display = 'flex';
+                        document.getElementById('approvedUserActions').style.display = 'none';
+                    } else {
+                        document.getElementById('pendingUserActions').style.display = 'none';
+                        document.getElementById('approvedUserActions').style.display = 'flex';
+                    }
+                    
+                    // 현재 사용자 ID 저장 (액션 함수에서 사용)
+                    window.currentUserId = userId;
+                    
+                    // 팝업 표시
+                    document.getElementById('userDetailModal').style.display = 'block';
+                } else {
+                    showAlert('usersAlert', '사용자 정보를 불러오는 중 오류가 발생했습니다.', 'error');
+                }
+            } catch (error) {
+                showAlert('usersAlert', '사용자 정보를 불러오는 중 오류가 발생했습니다.', 'error');
+            }
+        }
+        
+        // 사용자 상세 보기 팝업 닫기
+        function closeUserDetailModal() {
+            document.getElementById('userDetailModal').style.display = 'none';
+            window.currentUserId = null;
+        }
+        
+        // 사용자 승인
+        async function approveUser() {
+            if (!window.currentUserId) return;
+            
+            try {
+                const response = await fetch(`/api/users/${window.currentUserId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ approval_status: 'approved' })
+                });
+                
+                if (response.ok) {
+                    showAlert('usersAlert', '사용자가 승인되었습니다.', 'success');
+                    closeUserDetailModal();
+                    loadUsers(); // 사용자 목록 새로고침
+                } else {
+                    const error = await response.json();
+                    showAlert('usersAlert', error.error || '사용자 승인 중 오류가 발생했습니다.', 'error');
+                }
+            } catch (error) {
+                showAlert('usersAlert', '사용자 승인 중 오류가 발생했습니다.', 'error');
+            }
+        }
+        
+        // 사용자 거부
+        async function rejectUser() {
+            if (!window.currentUserId) return;
+            
+            try {
+                const response = await fetch(`/api/users/${window.currentUserId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ approval_status: 'rejected' })
+                });
+                
+                if (response.ok) {
+                    showAlert('usersAlert', '사용자가 거부되었습니다.', 'success');
+                    closeUserDetailModal();
+                    loadUsers(); // 사용자 목록 새로고침
+                } else {
+                    const error = await response.json();
+                    showAlert('usersAlert', error.error || '사용자 거부 중 오류가 발생했습니다.', 'error');
+                }
+            } catch (error) {
+                showAlert('usersAlert', '사용자 거부 중 오류가 발생했습니다.', 'error');
+            }
+        }
+        
+        // 사용자 상태 변경 (승인/거부 토글)
+        async function toggleUserStatus() {
+            if (!window.currentUserId) return;
+            
+            try {
+                const response = await fetch(`/api/users/${window.currentUserId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ approval_status: 'pending' })
+                });
+                
+                if (response.ok) {
+                    showAlert('usersAlert', '사용자 상태가 변경되었습니다.', 'success');
+                    closeUserDetailModal();
+                    loadUsers(); // 사용자 목록 새로고침
+                } else {
+                    const error = await response.json();
+                    showAlert('usersAlert', error.error || '사용자 상태 변경 중 오류가 발생했습니다.', 'error');
+                }
+            } catch (error) {
+                showAlert('usersAlert', '사용자 상태 변경 중 오류가 발생했습니다.', 'error');
+            }
+        }
+        
+        // 경매 상세 보기 표시
+        async function showAuctionDetail(auctionId) {
+            try {
+                const response = await fetch(`/api/auctions/${auctionId}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const auction = await response.json();
+                    console.log('경매 상세 정보:', auction); // 디버깅용
+                    
+                    // 팝업에 경매 정보 표시
+                    document.getElementById('detailAuctionId').textContent = auction.id;
+                    document.getElementById('detailAuctionTitle').textContent = auction.title || 'N/A';
+                    document.getElementById('detailAuctionCategory').textContent = auction.category || 'N/A';
+                    document.getElementById('detailAuctionStartingPrice').textContent = (auction.starting_price || auction.startingPrice || 0).toLocaleString() + '원';
+                    document.getElementById('detailAuctionCurrentPrice').textContent = (auction.current_price || auction.currentPrice || auction.starting_price || auction.startingPrice || 0).toLocaleString() + '원';
+                    document.getElementById('detailAuctionSeller').textContent = auction.seller_name || auction.seller?.username || 'N/A';
+                    document.getElementById('detailAuctionStatus').textContent = getAuctionStatusText(auction.status);
+                    document.getElementById('detailAuctionCreatedAt').textContent = new Date(auction.created_at || auction.createdAt).toLocaleDateString();
+                    
+                    // 핫한 경매 상태 표시
+                    const hotBtn = document.getElementById('hotAuctionBtn');
+                    if (auction.is_hot) {
+                        hotBtn.textContent = '핫한 경매 해제';
+                        hotBtn.className = 'btn btn-warning';
+                    } else {
+                        hotBtn.textContent = '핫한 경매로 설정';
+                        hotBtn.className = 'btn btn-primary';
+                    }
+                    
+                    // 시작일 표시
+                    const startTimeElement = document.getElementById('detailAuctionStartTime');
+                    if (auction.start_time) {
+                        startTimeElement.textContent = new Date(auction.start_time).toLocaleString('ko-KR');
+                    } else {
+                        startTimeElement.textContent = '승인 대기';
+                    }
+                    
+                    // 종료일 표시
+                    const endTimeElement = document.getElementById('detailAuctionEndTime');
+                    if (auction.end_time) {
+                        endTimeElement.textContent = new Date(auction.end_time).toLocaleString('ko-KR');
+                    } else {
+                        endTimeElement.textContent = '승인 대기';
+                    }
+                    
+                    // 남은 시간 계산 및 표시
+                    const timeLeftElement = document.getElementById('detailAuctionTimeLeft');
+                    if (auction.end_time && auction.status === 'active') {
+                        const now = new Date();
+                        const endTime = new Date(auction.end_time);
+                        const timeLeft = endTime.getTime() - now.getTime();
+                        
+                        if (timeLeft > 0) {
+                            const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                            const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                            
+                            let timeLeftText = '';
+                            if (days > 0) timeLeftText += `${days}일 `;
+                            if (hours > 0) timeLeftText += `${hours}시간 `;
+                            timeLeftText += `${minutes}분`;
+                            
+                            timeLeftElement.textContent = timeLeftText;
+                            
+                            // 1분 미만이면 빨간색으로 표시
+                            if (timeLeft < 60000) {
+                                timeLeftElement.style.color = '#ff4444';
+                                timeLeftElement.style.fontWeight = 'bold';
+                            } else {
+                                timeLeftElement.style.color = '#333';
+                                timeLeftElement.style.fontWeight = 'normal';
+                            }
+                        } else {
+                            timeLeftElement.textContent = '종료됨';
+                            timeLeftElement.style.color = '#ff4444';
+                        }
+                    } else {
+                        timeLeftElement.textContent = '승인 대기';
+                        timeLeftElement.style.color = '#666';
+                    }
+                    
+                    // 상품 설명 표시
+                    const descriptionDiv = document.getElementById('detailAuctionDescription');
+                    descriptionDiv.textContent = auction.description || '상품 설명이 없습니다.';
+                    
+                    // 경매 이미지 표시 (여러 필드명 시도)
+                    const imagesDiv = document.getElementById('detailAuctionImages');
+                    let images = [];
+                    
+                    // images 필드가 JSON 문자열인 경우 파싱
+                    if (auction.images) {
+                        try {
+                            if (typeof auction.images === 'string') {
+                                images = JSON.parse(auction.images);
+                            } else {
+                                images = auction.images;
+                            }
+                        } catch (e) {
+                            console.error('이미지 파싱 오류:', e);
+                            images = [];
+                        }
+                    } else if (auction.imageUris) {
+                        images = auction.imageUris;
+                    }
+                    
+                    if (images && images.length > 0) {
+                        imagesDiv.innerHTML = images.map(image => {
+                            // file:// 경로인 경우 처리
+                            let imageSrc = image;
+                            if (image.startsWith('file://')) {
+                                // 로컬 파일 경로는 웹에서 접근할 수 없으므로 기본 이미지 표시
+                                return `<div class="no-image">로컬 이미지<br>웹에서 접근 불가</div>`;
+                            }
+                            return `<img src="${image}" alt="경매 이미지" onerror="this.style.display='none'">`;
+                        }).join('');
+                    } else {
+                        imagesDiv.innerHTML = '<div class="no-image">경매 이미지가 없습니다</div>';
+                    }
+                    
+                    // 경매 상태에 따라 액션 버튼 표시
+                    if (auction.status === 'pending') {
+                        document.getElementById('pendingAuctionActions').style.display = 'flex';
+                        document.getElementById('activeAuctionActions').style.display = 'none';
+                    } else if (auction.status === 'active') {
+                        document.getElementById('pendingAuctionActions').style.display = 'none';
+                        document.getElementById('activeAuctionActions').style.display = 'flex';
+                    } else {
+                        document.getElementById('pendingAuctionActions').style.display = 'none';
+                        document.getElementById('activeAuctionActions').style.display = 'none';
+                    }
+                    
+                    // 현재 경매 ID 저장 (액션 함수에서 사용)
+                    window.currentAuctionId = auctionId;
+                    
+                    // 팝업 표시
+                    document.getElementById('auctionDetailModal').style.display = 'block';
+                } else {
+                    const errorData = await response.json();
+                    console.error('경매 정보 로드 오류:', errorData);
+                    showAlert('pendingAlert', `경매 정보를 불러오는 중 오류가 발생했습니다: ${errorData.message || '알 수 없는 오류'}`, 'error');
+                }
+            } catch (error) {
+                console.error('경매 상세 보기 오류:', error);
+                showAlert('pendingAlert', '경매 정보를 불러오는 중 오류가 발생했습니다.', 'error');
+            }
+        }
+        
+        // 경매 상세 보기 팝업 닫기
+        function closeAuctionDetailModal() {
+            document.getElementById('auctionDetailModal').style.display = 'none';
+            window.currentAuctionId = null;
+        }
+        
+        // 경매 목록 로드
+        async function loadAuctions() {
+            try {
+                const response = await fetch('/api/auctions/admin/all', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const auctions = await response.json();
+                const tbody = document.getElementById('auctionsTableBody');
+                
+                if (auctions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">등록된 경매가 없습니다.</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = auctions.map(auction => `
+                    <tr>
+                        <td>${auction.id}</td>
+                        <td>${auction.title || 'N/A'}</td>
+                        <td>${auction.category || 'N/A'}</td>
+                        <td>${(auction.currentPrice || auction.current_price || auction.startingPrice || auction.starting_price || 0).toLocaleString()}원</td>
+                        <td>${auction.seller?.username || auction.seller_name || auction.seller?.name || 'N/A'}</td>
+                        <td>${getAuctionStatusText(auction.status)}</td>
+                        <td>${auction.createdAt ? new Date(auction.createdAt).toLocaleDateString('ko-KR') : 'N/A'}</td>
+                        <td>
+                            <button class="btn btn-secondary" onclick="showAuctionDetail(${auction.id})">상세 보기</button>
+                    </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                showAlert('auctionsAlert', '경매 목록을 불러오는 중 오류가 발생했습니다.', 'error');
+            }
+        }
+        
+        // 승인 대기 경매 로드
+        async function loadPendingAuctions() {
+            try {
+                const response = await fetch('/api/auctions/admin/pending', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const auctions = await response.json();
+                const tbody = document.getElementById('pendingTableBody');
+                
+                if (auctions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px;">승인 대기 중인 경매가 없습니다.</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = auctions.map(auction => `
+                    <tr>
+                        <td>${auction.id}</td>
+                        <td>${auction.title || 'N/A'}</td>
+                        <td>${auction.category || 'N/A'}</td>
+                        <td>${(auction.starting_price || auction.startingPrice || 0).toLocaleString()}원</td>
+                        <td>${auction.seller_name || auction.seller?.username || 'N/A'}</td>
+                        <td>${formatDate(auction.created_at || auction.createdAt)}</td>
+                        <td>
+                            <button class="btn btn-secondary" onclick="showAuctionDetail(${auction.id})">상세 보기</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                showAlert('pendingAlert', '승인 대기 경매를 불러오는 중 오류가 발생했습니다.', 'error');
+            }
+        }
+        
+        // 새 사용자 생성
+        async function createUser(event) {
+            event.preventDefault();
+            
+            const userData = {
+                username: document.getElementById('newUsername').value,
+                email: document.getElementById('newEmail').value,
+                studentId: document.getElementById('newStudentId').value,
+                password: document.getElementById('newPassword').value,
+                userType: document.getElementById('newUserType').value,
+                approvalStatus: 'approved' // 새로 생성하는 사용자는 바로 승인
+            };
+            
+            try {
+                const response = await fetch('/api/admin/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(userData)
+                });
+                
+                if (response.ok) {
+                    showAlert('createUserAlert', '사용자가 생성되었습니다.', 'success');
+                    event.target.reset();
+                    loadStats();
+                    loadUsers(); // 사용자 목록 새로고침
+                } else {
+                    const error = await response.json();
+                    showAlert('createUserAlert', error.message || '사용자 생성 중 오류가 발생했습니다.', 'error');
+                }
+            } catch (error) {
+                showAlert('createUserAlert', '사용자 생성 중 오류가 발생했습니다.', 'error');
+            }
+        }
+        
+        // 사용자 상세보기
+
+        
+
+        
+
+        
+        // 경매 승인
+        async function approveAuction() {
+            if (!window.currentAuctionId) return;
+            
+            try {
+                const response = await fetch(`/api/auctions/${window.currentAuctionId}/approve`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    showAlert('pendingAlert', '경매가 승인되었습니다.', 'success');
+                    closeAuctionDetailModal();
+                    loadPendingAuctions();
+                    loadStats();
+                } else {
+                    showAlert('pendingAlert', '경매 승인 중 오류가 발생했습니다.', 'error');
+                }
+            } catch (error) {
+                showAlert('pendingAlert', '경매 승인 중 오류가 발생했습니다.', 'error');
+            }
+        }
+        
+        // 경매 거부
+        async function rejectAuction() {
+            if (!window.currentAuctionId) return;
+            
+            try {
+                const response = await fetch(`/api/auctions/${window.currentAuctionId}/reject`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    showAlert('pendingAlert', '경매가 거부되었습니다.', 'success');
+                    closeAuctionDetailModal();
+                    loadPendingAuctions();
+                    loadStats();
+                } else {
+                    showAlert('pendingAlert', '경매 거부 중 오류가 발생했습니다.', 'error');
+                }
+            } catch (error) {
+                showAlert('pendingAlert', '경매 거부 중 오류가 발생했습니다.', 'error');
+            }
+        }
+        
+        // 경매 종료
+        async function endAuction() {
+            if (!window.currentAuctionId) return;
+            
+            try {
+                const response = await fetch(`/api/auctions/${window.currentAuctionId}/end`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    showAlert('auctionsAlert', '경매가 종료되었습니다.', 'success');
+                    closeAuctionDetailModal();
+                    loadAuctions();
+                    loadStats();
+                } else {
+                    showAlert('auctionsAlert', '경매 종료 중 오류가 발생했습니다.', 'error');
+                }
+            } catch (error) {
+                showAlert('auctionsAlert', '경매 종료 중 오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // 핫한 경매 토글
+        async function toggleHotAuction() {
+            if (!window.currentAuctionId) return;
+            
+            const btn = document.getElementById('hotAuctionBtn');
+            const isCurrentlyHot = btn.textContent.includes('해제');
+            const isHot = !isCurrentlyHot;
+            
+            try {
+                const response = await fetch(`/api/auctions/${window.currentAuctionId}/set-hot`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}` 
+                    },
+                    body: JSON.stringify({ isHot })
+                });
+                
+                if (response.ok) {
+                    const message = isHot ? '핫한 경매로 설정되었습니다.' : '핫한 경매 설정이 해제되었습니다.';
+                    showAlert('auctionsAlert', message, 'success');
+                    
+                    // 버튼 텍스트 업데이트
+                    btn.textContent = isHot ? '핫한 경매 해제' : '핫한 경매로 설정';
+                    btn.className = isHot ? 'btn btn-warning' : 'btn btn-primary';
+                    
+                    loadAuctions();
+                    loadStats();
+                } else {
+                    showAlert('auctionsAlert', '핫한 경매 설정 중 오류가 발생했습니다.', 'error');
+                }
+            } catch (error) {
+                showAlert('auctionsAlert', '핫한 경매 설정 중 오류가 발생했습니다.', 'error');
+            }
+        }
+        
+        // 사용자 타입 텍스트 변환
+        function getUserTypeText(userType) {
+            return userType === 'admin' ? '관리자' : '일반 사용자';
+        }
+        
+        // 승인 상태 텍스트 변환
+        function getApprovalStatusText(status) {
+            const statusMap = {
+                'pending': '승인 대기',
+                'approved': '승인됨',
+                'rejected': '거부됨'
+            };
+            return statusMap[status] || status;
+        }
+        
+        // 경매 상태 텍스트 변환
+        function getAuctionStatusText(status) {
+            const statusMap = {
+                'active': '진행중',
+                'ended': '종료됨',
+                'pending': '승인 대기'
+            };
+            return statusMap[status] || status;
+        }
+        
+        // 날짜 포맷
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ko-KR');
+        }
+        
+        // 모달 외부 클릭 시 닫기
+        window.onclick = function(event) {
+            const auctionModal = document.getElementById('auctionModal');
+            
+            if (event.target === auctionModal) {
+                closeModal();
+            }
+        }
+        
+        // 로그 로드
+        async function loadLogs() {
+            try {
+                const filter = document.getElementById('logFilter').value;
+                const limit = document.getElementById('logLimit').value;
+                
+                let url = `/api/auctions/admin/logs?limit=${limit}`;
+                if (filter) {
+                    url += `&action=${filter}`;
+                }
+                
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const tbody = document.getElementById('logsTableBody');
+                    
+                    if (data.logs.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">로그가 없습니다.</td></tr>';
+                        return;
+                    }
+                    
+                    tbody.innerHTML = data.logs.map(log => {
+                        const details = log.details ? JSON.parse(log.details) : {};
+                        let detailsText = '';
+                        
+                        switch(log.action) {
+                            case 'created':
+                                detailsText = `제목: ${details.title}, 카테고리: ${details.category}, 시작가: ${details.startingPrice}원`;
+                                break;
+                            case 'approved':
+                                detailsText = `시작: ${new Date(details.startTime).toLocaleString()}, 종료: ${new Date(details.endTime).toLocaleString()}`;
+                                break;
+                            case 'bid_placed':
+                                detailsText = `입찰가: ${details.amount}원 (이전: ${details.previousPrice}원)`;
+                                break;
+                            case 'ended':
+                                detailsText = `최종가: ${details.finalPrice}원, 사유: ${details.reason}`;
+                                break;
+                            case 'delayed_end':
+                                detailsText = `${details.delayMinutes}분 지연, 새 종료시간: ${new Date(details.newEndTime).toLocaleString()}`;
+                                break;
+                            default:
+                                detailsText = JSON.stringify(details);
+                        }
+                        
+                        return `
+                            <tr>
+                                <td>${new Date(log.timestamp).toLocaleString('ko-KR')}</td>
+                                <td>${log.auction_id || '-'}</td>
+                                <td>${log.auction_title || '-'}</td>
+                                <td>${log.username || '-'}</td>
+                                <td><span class="action-badge action-${log.action}">${getActionText(log.action)}</span></td>
+                                <td class="log-details">${detailsText}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    showAlert('logsAlert', '로그를 불러오는 중 오류가 발생했습니다.', 'error');
+                }
+            } catch (error) {
+                console.error('로그 로드 오류:', error);
+                showAlert('logsAlert', '로그를 불러오는 중 오류가 발생했습니다.', 'error');
+            }
+        }
+        
+        // 액션 텍스트 변환
+        function getActionText(action) {
+            const actionMap = {
+                'created': '생성',
+                'approved': '승인',
+                'rejected': '거부',
+                'bid_placed': '입찰',
+                'ended': '종료',
+                'delayed_end': '지연종료',
+                'updated': '수정'
+            };
+            return actionMap[action] || action;
+        }
+        
+        // 지연 종료 모달 표시
+        function showDelayEndModal() {
+            document.getElementById('delayEndModal').style.display = 'block';
+        }
+        
+        // 지연 종료 모달 닫기
+        function closeDelayEndModal() {
+            document.getElementById('delayEndModal').style.display = 'none';
+        }
+        
+        // 지연 종료 확인
+        async function confirmDelayEnd() {
+            if (!window.currentAuctionId) return;
+            
+            const minutes = parseInt(document.getElementById('delayMinutes').value);
+            if (!minutes || minutes < 1 || minutes > 1440) {
+                showAlert('auctionsAlert', '1분 ~ 24시간 사이의 값을 입력하세요.', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/auctions/${window.currentAuctionId}/delay-end`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}` 
+                    },
+                    body: JSON.stringify({ minutes })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert('auctionsAlert', result.message, 'success');
+                    closeDelayEndModal();
+                    closeAuctionDetailModal();
+                    loadAuctions();
+                    loadStats();
+                } else {
+                    const errorData = await response.json();
+                    showAlert('auctionsAlert', errorData.message || '지연 종료 중 오류가 발생했습니다.', 'error');
+                }
+            } catch (error) {
+                console.error('지연 종료 오류:', error);
+                showAlert('auctionsAlert', '지연 종료 중 오류가 발생했습니다.', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

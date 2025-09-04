@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DyAuction 관리자 로그인</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .login-container {
+            background: white;
+            padding: 50px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }
+        
+        .logo {
+            margin-bottom: 40px;
+        }
+        
+        .logo h1 {
+            color: #212529;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        
+        .logo p {
+            color: #6c757d;
+            font-size: 15px;
+            font-weight: 400;
+        }
+        
+        .login-form {
+            text-align: left;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #495057;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            background: #fff;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+        
+        .form-group input::placeholder {
+            color: #adb5bd;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 8px;
+        }
+        
+        .login-btn:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+        
+        .login-btn:active {
+            transform: translateY(0);
+        }
+        
+        .alert {
+            padding: 14px 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            display: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 24px;
+        }
+        
+        .spinner {
+            border: 2px solid #e9ecef;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 24px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1>DyAuction</h1>
+            <p>Admin Portal</p>
+        </div>
+        
+        <form class="login-form" onsubmit="login(event)">
+            <div class="form-group">
+                <label for="email">이메일</label>
+                <input type="email" id="email" required placeholder="이메일을 입력하세요">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">비밀번호</label>
+                <input type="password" id="password" required placeholder="비밀번호를 입력하세요">
+            </div>
+            
+            <button type="submit" class="login-btn" id="loginBtn">
+                로그인
+            </button>
+        </form>
+        
+        <div id="alert" class="alert"></div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>로그인 중...</p>
+        </div>
+        
+        <div class="footer">
+            <p>관리자 계정으로만 접근 가능합니다</p>
+        </div>
+    </div>
+    
+    <script>
+        // 페이지 로드 시 이미 로그인된 경우 관리자 페이지로 리다이렉트
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 로그인 페이지 로드됨');
+            const token = localStorage.getItem('adminToken');
+            if (token) {
+                console.log('🔑 저장된 토큰 발견, 유효성 검증 시작');
+                // 토큰 유효성 검증
+                validateToken(token);
+            } else {
+                console.log('🔑 저장된 토큰 없음');
+            }
+        });
+        
+        // 로그인 함수
+        async function login(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const loading = document.getElementById('loading');
+            
+            // 로딩 상태 표시
+            loginBtn.style.display = 'none';
+            loading.style.display = 'block';
+            hideAlert();
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.user && data.user.user_type === 'admin') {
+                    // 관리자 계정인 경우
+                    console.log('✅ 관리자 로그인 성공:', data.user);
+                    
+                    localStorage.setItem('adminToken', data.token);
+                    localStorage.setItem('adminUser', JSON.stringify(data.user));
+                    
+                    showAlert('로그인 성공! 관리자 페이지로 이동합니다.', 'success');
+                    
+                    // 즉시 관리자 페이지로 리다이렉트 (지연 제거)
+                    window.location.href = '/admin.html';
+                    
+                } else {
+                    // 일반 사용자이거나 로그인 실패
+                    console.log('❌ 관리자 계정이 아님:', data);
+                    showAlert('관리자 계정만 접근 가능합니다.', 'error');
+                    resetLoginForm();
+                }
+                
+            } catch (error) {
+                console.error('로그인 오류:', error);
+                showAlert('서버 연결 오류가 발생했습니다.', 'error');
+                resetLoginForm();
+            }
+        }
+        
+        // 토큰 유효성 검증
+        async function validateToken(token) {
+            try {
+                console.log('🔍 로그인 페이지에서 토큰 검증 시작');
+                
+                const response = await fetch('/api/users', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                console.log('📡 로그인 페이지 API 응답:', response.status, response.ok);
+                
+                if (response.ok) {
+                    console.log('✅ 토큰 유효, 관리자 페이지로 리다이렉트');
+                    // 토큰이 유효한 경우 관리자 페이지로 리다이렉트
+                    window.location.href = '/admin.html';
+                } else {
+                    console.log('❌ 토큰 무효, 로컬 스토리지 정리');
+                    // 토큰이 유효하지 않은 경우 제거
+                    localStorage.removeItem('adminToken');
+                    localStorage.removeItem('adminUser');
+                }
+            } catch (error) {
+                console.error('🚨 로그인 페이지 토큰 검증 오류:', error);
+                // 에러 발생 시 토큰 제거
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminUser');
+            }
+        }
+        
+        // 알림 표시
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.style.display = 'block';
+        }
+        
+        // 알림 숨기기
+        function hideAlert() {
+            const alert = document.getElementById('alert');
+            alert.style.display = 'none';
+        }
+        
+        // 로그인 폼 초기화
+        function resetLoginForm() {
+            const loginBtn = document.getElementById('loginBtn');
+            const loading = document.getElementById('loading');
+            
+            loginBtn.style.display = 'block';
+            loading.style.display = 'none';
+            
+            document.getElementById('password').value = '';
+        }
+        
+        // Enter 키로 로그인
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const loginForm = document.querySelector('.login-form');
+                if (loginForm) {
+                    loginForm.dispatchEvent(new Event('submit'));
+                }
+            }
+        });
+    </script>
+</body>
+</html>
