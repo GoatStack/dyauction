@@ -1,0 +1,63 @@
+[2025-09-03T15:47:34.987Z] approved | Auction: 7 | User: 1 | Details: {"startTime":"2025-09-03T15:47:34.980Z","endTime":"2025-09-04T15:47:34.980Z","duration":1440}
+[2025-09-03T15:47:56.497Z] ended | Auction: 7 | User: 1 | Details: {"finalPrice":213123,"reason":"admin_manual_end"}
+[2025-09-03T16:11:16.560Z] approved | Auction: 6 | User: 1 | Details: {"startTime":"2025-09-03T16:11:16.556Z","endTime":"2025-09-04T16:11:16.556Z","duration":1440}
+[2025-09-03T16:42:07.191Z] bid_placed | Auction: 6 | User: 1 | Details: {"amount":223123,"previousPrice":213123,"newPrice":223123}
+[2025-09-03T16:42:15.542Z] bid_placed | Auction: 6 | User: 1 | Details: {"amount":231123,"previousPrice":223123,"newPrice":231123}
+[2025-09-03T16:43:18.877Z] bid_placed | Auction: 6 | User: 1 | Details: {"amount":232123,"previousPrice":231123,"newPrice":232123}
+[2025-09-03T16:43:24.776Z] bid_placed | Auction: 6 | User: 1 | Details: {"amount":250123,"previousPrice":232123,"newPrice":250123}
+[2025-09-03T16:43:31.906Z] bid_placed | Auction: 6 | User: 1 | Details: {"amount":251123,"previousPrice":250123,"newPrice":251123}
+[2025-09-03T16:43:38.203Z] bid_placed | Auction: 6 | User: 1 | Details: {"amount":274123,"previousPrice":251123,"newPrice":274123}
+[2025-09-03T16:46:05.867Z] bid_placed | Auction: 6 | User: 1 | Details: {"amount":275123,"previousPrice":274123,"newPrice":275123}
+[2025-09-03T16:47:01.771Z] ended | Auction: 6 | User: 1 | Details: {"finalPrice":275123,"reason":"admin_manual_end"}
+[2025-09-03T16:53:27.275Z] created | Auction: 9 | User: 1 | Details: {"title":"오늘 마지막테스트면 좋게ㅛ다","category":"도서","startingPrice":2000,"duration":"1h","status":"pending"}
+[2025-09-03T16:53:42.561Z] approved | Auction: 9 | User: 1 | Details: {"startTime":"2025-09-03T16:53:42.557Z","endTime":"2025-09-03T17:53:42.557Z","duration":60}
+[2025-09-03T16:54:55.124Z] bid_placed | Auction: 9 | User: 1 | Details: {"amount":3000,"previousPrice":2000,"newPrice":3000}
+[2025-09-03T16:55:13.030Z] delayed_end | Auction: 9 | User: 1 | Details: {"delayMinutes":2,"originalEndTime":"2025-09-03T17:53:42.557Z","newEndTime":"2025-09-03T16:57:13.026Z"}
+[2025-09-03T17:07:37.791Z] set_hot | Auction: 9 | User: 1 | Details: {"auctionTitle":"오늘 마지막테스트면 좋게ㅛ다","isHot":true}
+[2025-09-03T17:08:00.739Z] ended | Auction: 9 | User: 1 | Details: {"finalPrice":3000,"reason":"admin_manual_end"}
+[2025-09-03T17:19:32.099Z] created | Auction: 10 | User: 10 | Details: {"title":"찐막?","category":"도서","startingPrice":12323,"duration":"1h","status":"pending"}
+[2025-09-03T17:19:44.821Z] approved | Auction: 10 | User: 1 | Details: {"startTime":"2025-09-03T17:19:44.818Z","endTime":"2025-09-03T18:19:44.818Z","duration":60}
+[2025-09-03T17:31:06.162Z] set_hot | Auction: 10 | User: 1 | Details: {"auctionTitle":"찐막?","isHot":true}
+[2025-09-03T18:13:23.098Z] created | Auction: 1 | User: 1 | Details: {"title":"테스트","category":"전자기기","startingPrice":2000,"duration":"1h","status":"pending"}
+[2025-09-03T18:13:53.767Z] approved | Auction: 1 | User: 1 | Details: {"startTime":"2025-09-03T18:13:53.762Z","endTime":"2025-09-03T19:13:53.762Z","duration":60}
+[2025-09-03T23:56:57.041Z] created | Auction: 2 | User: 1 | Details: {"title":"새로운 테스트 경매","category":"전자기기","startingPrice":5000,"duration":"1d","status":"pending"}
+[2025-09-03T23:57:45.489Z] approved | Auction: 2 | User: 1 | Details: {"startTime":"2025-09-03T23:57:45.484Z","endTime":"2025-09-04T23:57:45.484Z","duration":1440}
+[2025-09-04T00:45:29.799Z] set_hot | Auction: 1 | User: 1 | Details: {"auctionTitle":"테스트","isHot":true}
+[2025-09-04T00:45:31.701Z] set_hot | Auction: 1 | User: 1 | Details: {"auctionTitle":"테스트","isHot":true}
+[2025-09-04T00:45:33.629Z] set_hot | Auction: 1 | User: 1 | Details: {"auctionTitle":"테스트","isHot":true}
+[2025-09-04T00:45:34.507Z] set_hot | Auction: 1 | User: 1 | Details: {"auctionTitle":"테스트","isHot":true}
+[2025-09-04T00:45:41.989Z] unset_hot | Auction: 1 | User: 1 | Details: {"auctionTitle":"테스트","isHot":false}
+[2025-09-04T01:06:35.797Z] created | Auction: 3 | User: 1 | Details: {"title":"테스트2","category":"게임","startingPrice":10000,"duration":"1h","status":"pending"}
+[2025-09-04T01:06:54.176Z] approved | Auction: 3 | User: 1 | Details: {"startTime":"2025-09-04T01:06:54.171Z","endTime":"2025-09-04T02:06:54.171Z","duration":60}
+[2025-09-04T01:16:38.234Z] created | Auction: 4 | User: 1 | Details: {"title":"테승트22","category":"도서","startingPrice":20000,"duration":"1h","status":"pending"}
+[2025-09-04T01:21:31.777Z] created | Auction: 5 | User: 1 | Details: {"title":"테스트 찐막?","category":"도서","startingPrice":20000,"duration":"1h","status":"pending"}
+[2025-09-04T01:21:49.209Z] approved | Auction: 5 | User: 1 | Details: {"startTime":"2025-09-04T01:21:49.206Z","endTime":"2025-09-04T02:21:49.206Z","duration":60}
+[2025-09-04T01:24:01.527Z] created | Auction: 6 | User: 1 | Details: {"title":"이미지 테스트 경매","category":"전자기기","startingPrice":10000,"duration":"1d","status":"pending"}
+[2025-09-04T01:24:16.114Z] approved | Auction: 6 | User: 1 | Details: {"startTime":"2025-09-04T01:24:16.111Z","endTime":"2025-09-05T01:24:16.111Z","duration":1440}
+[2025-09-04T01:24:55.232Z] created | Auction: 7 | User: 1 | Details: {"title":"테스트 찐막?","category":"도서","startingPrice":20000,"duration":"1h","status":"pending"}
+[2025-09-04T01:24:56.817Z] created | Auction: 8 | User: 1 | Details: {"title":"테스트 찐막?2","category":"도서","startingPrice":20000,"duration":"1h","status":"pending"}
+[2025-09-04T01:25:08.328Z] approved | Auction: 8 | User: 1 | Details: {"startTime":"2025-09-04T01:25:08.327Z","endTime":"2025-09-04T02:25:08.327Z","duration":60}
+[2025-09-04T01:26:49.658Z] created | Auction: 9 | User: 1 | Details: {"title":"다양한 이미지 테스트","category":"전자기기","startingPrice":15000,"duration":"1d","status":"pending"}
+[2025-09-04T01:27:33.469Z] created | Auction: 10 | User: 1 | Details: {"title":"스마트폰 경매","category":"전자기기","startingPrice":500000,"duration":"2d","status":"pending"}
+[2025-09-04T01:27:42.383Z] created | Auction: 11 | User: 1 | Details: {"title":"노트북 경매","category":"전자기기","startingPrice":800000,"duration":"3d","status":"pending"}
+[2025-09-04T05:48:57.720Z] bid_placed | Auction: 11 | User: 2 | Details: {"amount":801000,"previousPrice":800000,"newPrice":801000}
+[2025-09-04T05:49:20.594Z] bid_placed | Auction: 10 | User: 2 | Details: {"amount":501000,"previousPrice":500000,"newPrice":501000}
+[2025-09-04T05:49:43.551Z] bid_placed | Auction: 11 | User: 2 | Details: {"amount":802000,"previousPrice":801000,"newPrice":802000}
+[2025-09-04T06:06:20.506Z] set_hot | Auction: 11 | User: 1 | Details: {"auctionTitle":"노트북 경매","isHot":true}
+[2025-09-04T06:06:22.246Z] set_hot | Auction: 11 | User: 1 | Details: {"auctionTitle":"노트북 경매","isHot":true}
+[2025-09-04T06:06:32.260Z] set_hot | Auction: 10 | User: 1 | Details: {"auctionTitle":"스마트폰 경매","isHot":true}
+[2025-09-04T06:08:24.240Z] created | Auction: 12 | User: 1 | Details: {"title":"노민권","category":"기타","startingPrice":5000,"duration":"1h","status":"pending"}
+[2025-09-04T06:08:31.971Z] approved | Auction: 12 | User: 1 | Details: {"startTime":"2025-09-04T06:08:31.968Z","endTime":"2025-09-04T07:08:31.968Z","duration":60}
+[2025-09-04T06:14:34.362Z] created | Auction: 13 | User: 1 | Details: {"title":"노민권","category":"기타","startingPrice":5000,"duration":"1h","status":"pending"}
+[2025-09-04T06:14:42.180Z] ended | Auction: 12 | User: 1 | Details: {"finalPrice":5000,"reason":"admin_manual_end"}
+[2025-09-04T06:14:48.686Z] approved | Auction: 13 | User: 1 | Details: {"startTime":"2025-09-04T06:14:48.682Z","endTime":"2025-09-04T07:14:48.682Z","duration":60}
+[2025-09-04T09:57:22.216Z] created | Auction: 1 | User: 1 | Details: {"title":"사람","category":"기타","startingPrice":1000,"duration":"1h","status":"pending"}
+[2025-09-04T09:57:34.197Z] approved | Auction: 1 | User: 1 | Details: {"startTime":"2025-09-04T09:57:34.192Z","endTime":"2025-09-04T10:57:34.192Z","duration":60}
+[2025-09-04T10:00:46.769Z] created | Auction: 2 | User: 2 | Details: {"title":"ㅎ","category":"전자기기","startingPrice":1000,"duration":"1h","status":"pending"}
+[2025-09-04T10:01:12.672Z] approved | Auction: 2 | User: 1 | Details: {"startTime":"2025-09-04T10:01:12.667Z","endTime":"2025-09-04T11:01:12.667Z","duration":60}
+[2025-09-04T10:01:48.115Z] set_hot | Auction: 2 | User: 1 | Details: {"auctionTitle":"ㅎ","isHot":true}
+[2025-09-04T10:05:34.580Z] bid_placed | Auction: 2 | User: 1 | Details: {"amount":51000,"previousPrice":1000,"newPrice":51000}
+[2025-09-04T10:05:50.455Z] bid_placed | Auction: 2 | User: 1 | Details: {"amount":101000,"previousPrice":51000,"newPrice":101000}
+[2025-09-04T10:06:03.109Z] bid_placed | Auction: 1 | User: 2 | Details: {"amount":51000,"previousPrice":1000,"newPrice":51000}
+[2025-09-04T10:07:02.676Z] ended | Auction: 2 | User: 1 | Details: {"finalPrice":101000,"reason":"admin_manual_end"}
+[2025-09-04T10:17:34.095Z] delayed_end | Auction: 1 | User: 1 | Details: {"delayMinutes":5,"originalEndTime":"2025-09-04T10:57:34.192Z","newEndTime":"2025-09-04T10:22:34.093Z"}
