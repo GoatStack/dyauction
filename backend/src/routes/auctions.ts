@@ -1,6 +1,13 @@
 import express from 'express';
 import { getDatabase } from '../config/database';
 import { auth, AuthRequest } from '../middleware/auth';
+import {
+  AuctionQueryResult,
+  AuctionRecord,
+  CreateAuctionRequest,
+  CreateBidRequest,
+  FormattedAuction
+} from '../types/auction';
 
 const router = express.Router();
 
@@ -27,10 +34,10 @@ router.get('/', async (req, res) => {
       WHERE a.status = 'active'
       GROUP BY a.id
       ORDER BY a.created_at DESC
-    `).all();
+    `).all() as AuctionQueryResult[];
     
     // 응답 데이터 형식 맞추기
-    const formattedAuctions = auctions.map(auction => ({
+    const formattedAuctions: FormattedAuction[] = auctions.map((auction) => ({
       ...auction,
       seller: {
         username: auction.sellerName
@@ -68,13 +75,13 @@ router.get('/:id', async (req, res) => {
       LEFT JOIN bids b ON a.id = b.auction_id
       WHERE a.id = ?
       GROUP BY a.id
-    `).get(id);
+    `).get(id) as AuctionQueryResult | undefined;
     
     if (!auction) {
       return res.status(404).json({ message: '경매를 찾을 수 없습니다.' });
     }
     
-    const formattedAuction = {
+    const formattedAuction: FormattedAuction = {
       ...auction,
       seller: {
         username: auction.sellerName
@@ -92,7 +99,7 @@ router.get('/:id', async (req, res) => {
 // 새 경매 생성
 router.post('/', auth, async (req: AuthRequest, res) => {
   try {
-    const { title, description, startingPrice, endTime } = req.body;
+    const { title, description, startingPrice, endTime }: CreateAuctionRequest = req.body;
     const sellerId = req.user?.userId;
     
     if (!sellerId) {
@@ -134,7 +141,7 @@ router.post('/', auth, async (req: AuthRequest, res) => {
 router.post('/:id/bid', auth, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
-    const { amount } = req.body;
+    const { amount }: CreateBidRequest = req.body;
     const bidderId = req.user?.userId;
     
     if (!bidderId) {
@@ -148,7 +155,7 @@ router.post('/:id/bid', auth, async (req: AuthRequest, res) => {
     const db = getDatabase();
     
     // 경매 정보 확인
-    const auction = db.prepare('SELECT * FROM auctions WHERE id = ?').get(id);
+    const auction = db.prepare('SELECT * FROM auctions WHERE id = ?').get(id) as AuctionRecord | undefined;
     if (!auction) {
       return res.status(404).json({ message: '경매를 찾을 수 없습니다.' });
     }
@@ -199,7 +206,7 @@ router.patch('/:id/end', auth, async (req: AuthRequest, res) => {
     const db = getDatabase();
     
     // 경매 소유자 확인
-    const auction = db.prepare('SELECT * FROM auctions WHERE id = ? AND seller_id = ?').get(id, userId);
+    const auction = db.prepare('SELECT * FROM auctions WHERE id = ? AND seller_id = ?').get(id, userId) as AuctionRecord | undefined;
     if (!auction) {
       return res.status(403).json({ message: '경매를 종료할 권한이 없습니다.' });
     }
