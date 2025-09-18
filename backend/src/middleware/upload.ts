@@ -22,10 +22,19 @@ const storage = multer.diskStorage({
 
 // 파일 필터링
 const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  console.log('File filter - File details:', {
+    fieldname: file.fieldname,
+    originalname: file.originalname,
+    mimetype: file.mimetype,
+    size: file.size
+  });
+  
   // 이미지 파일만 허용
   if (file.mimetype.startsWith('image/')) {
+    console.log('File accepted:', file.originalname);
     cb(null, true);
   } else {
+    console.log('File rejected:', file.originalname, 'mimetype:', file.mimetype);
     cb(new Error('이미지 파일만 업로드 가능합니다.'));
   }
 };

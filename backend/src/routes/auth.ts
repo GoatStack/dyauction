@@ -7,7 +7,15 @@ import { singleImage } from '../middleware/upload';
 const router = express.Router();
 
 // 회원가입 (이미지 업로드 포함)
-router.post('/signup', singleImage, async (req, res) => {
+router.post('/signup', (req, res, next) => {
+  singleImage(req, res, (err) => {
+    if (err) {
+      console.error('Multer error:', err);
+      return res.status(400).json({ message: '파일 업로드 오류: ' + err.message });
+    }
+    next();
+  });
+}, async (req, res) => {
   try {
     console.log('📥 회원가입 요청 데이터:', {
       body: req.body,
