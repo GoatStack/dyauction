@@ -12,6 +12,7 @@ import {
 } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
+import { getApiUrl } from '../config/api';
 
 interface User {
   id: string;
@@ -52,7 +53,7 @@ export default function EditProfileScreen() {
         return;
       }
 
-      const response = await fetch('http://192.168.0.36:3000/api/users/profile', {
+      const response = await fetch(getApiUrl('/users/profile'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -119,7 +120,7 @@ export default function EditProfileScreen() {
       }
 
       // 프로필 정보 업데이트
-      const response = await fetch('http://192.168.0.36:3000/api/users/profile', {
+      const response = await fetch(getApiUrl('/users/profile'), {
         method: 'PUT',
         headers: { 
           'Authorization': `Bearer ${(global as any).token || 'test-token'}`,
@@ -206,7 +207,7 @@ export default function EditProfileScreen() {
 
       console.log('FormData created:', formData);
 
-      const response = await fetch('http://192.168.0.36:3000/api/users/upload-profile-image', {
+      const response = await fetch(getApiUrl('/users/upload-profile-image'), {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${(global as any).token || 'test-token'}`,

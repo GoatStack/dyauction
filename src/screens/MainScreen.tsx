@@ -28,6 +28,7 @@ import { auctionAPI } from '../utils/database';
 import { notificationManager, Notification } from '../utils/notificationManager';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { normalizeImageUrl, formatAuctionImages } from '../utils/imageUtils';
+import { useAuth } from '../contexts/AuthContext';
 
 const { width, height } = Dimensions.get('window');
 

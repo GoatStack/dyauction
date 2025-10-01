@@ -84,7 +84,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       // 백엔드 서버 연결 테스트
       console.log('🔗 백엔드 서버 연결 테스트 중...');
       try {
-        const testResponse = await fetch('http://40.82.159.69:65000/');
+        const testResponse = await fetch('http://40.82.159.69:65000/api/health');
         console.log('✅ 백엔드 서버 연결 성공:', testResponse.status);
       } catch (testError) {
         console.error('❌ 백엔드 서버 연결 실패:', testError);

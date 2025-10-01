@@ -434,23 +434,19 @@ export default function ProfileScreen() {
         {/* 새로운 메뉴 */}
         <View style={styles.newMenuCard}>
           <Text style={styles.newSectionTitle}>설정</Text>
-          <TouchableOpacity style={styles.newMenuItem} onPress={() => Alert.alert('찜한 상품', '찜한 상품 화면으로 이동')}>
-            <IconButton icon="heart-outline" size={18} iconColor="#666" />
-            <Text style={styles.newMenuItemText}>찜한 상품</Text>
-            <View style={styles.countBadge}>
-              <Text style={styles.countBadgeText}>0</Text>
-            </View>
+          <View style={[styles.newMenuItem, styles.disabledMenuItem]}>
+            <IconButton icon="heart-outline" size={18} iconColor="#ccc" />
+            <Text style={[styles.newMenuItemText, styles.disabledText]}>찜한 상품</Text>
+            <Text style={styles.preparingText}>준비중</Text>
             <IconButton icon="chevron-right" size={18} iconColor="#ccc" />
-          </TouchableOpacity>
+          </View>
           <View style={styles.newMenuDivider} />
-          <TouchableOpacity style={styles.newMenuItem} onPress={() => Alert.alert('최근 본 상품', '최근 본 상품 화면으로 이동')}>
-            <IconButton icon="clock-outline" size={18} iconColor="#666" />
-            <Text style={styles.newMenuItemText}>최근 본 상품</Text>
-            <View style={styles.countBadge}>
-              <Text style={styles.countBadgeText}>0</Text>
-            </View>
+          <View style={[styles.newMenuItem, styles.disabledMenuItem]}>
+            <IconButton icon="clock-outline" size={18} iconColor="#ccc" />
+            <Text style={[styles.newMenuItemText, styles.disabledText]}>최근 본 상품</Text>
+            <Text style={styles.preparingText}>준비중</Text>
             <IconButton icon="chevron-right" size={18} iconColor="#ccc" />
-          </TouchableOpacity>
+          </View>
           <View style={styles.newMenuDivider} />
           <TouchableOpacity style={styles.newMenuItem} onPress={() => navigation.navigate('Settings')}>
             <IconButton icon="cog-outline" size={18} iconColor="#666" />
@@ -1396,5 +1392,18 @@ const styles = StyleSheet.create({
   },
   loadingSpinner: {
     marginTop: 16,
+  },
+  disabledMenuItem: {
+    opacity: 0.6,
+  },
+  disabledText: {
+    color: '#999',
+  },
+  preparingText: {
+    fontSize: 12,
+    color: '#999',
+    fontStyle: 'italic',
+    marginLeft: 'auto',
+    marginRight: 8,
   },
 });

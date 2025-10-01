@@ -1,7 +1,7 @@
 // 백엔드 API 기본 URL
 // React Native 시뮬레이터에서는 localhost 대신 127.0.0.1 (iOS) 사용
 const API_BASE_URL = __DEV__ 
-  ? 'http://40.82.159.69:65000/api'  // iOS 시뮬레이터
+  ? 'http://40.82.159.69:65000/api'  // 개발 환경
   : 'http://40.82.159.69:65000/api';  // 프로덕션
 
 // API 호출 헬퍼 함수
@@ -9,12 +9,25 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
   
   console.log('🌐 API 호출:', url, options.method || 'GET');
+  console.log('🔍 API_BASE_URL:', API_BASE_URL);
+  console.log('🔍 endpoint:', endpoint);
   
   try {
+    // 저장된 토큰 가져오기
+    const token = (global as any).token;
+    console.log('🔑 저장된 토큰:', token ? '있음' : '없음');
+    
     // FormData인 경우 Content-Type 헤더를 자동으로 설정하도록 함
     const headers = options.body instanceof FormData 
-      ? { ...options.headers }  // FormData는 Content-Type을 자동 설정
-      : { 'Content-Type': 'application/json', ...options.headers };
+      ? { 
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+          ...options.headers 
+        }  // FormData는 Content-Type을 자동 설정
+      : { 
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+          ...options.headers 
+        };
     
     console.log('📤 요청 헤더:', headers);
     if (options.body) {
@@ -24,6 +37,9 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
     const response = await fetch(url, {
       headers,
       ...options,
+      // HTTP 요청 허용을 위한 설정
+      mode: 'cors',
+      credentials: 'include',
     });
     
     console.log('📥 응답 상태:', response.status, response.statusText);
@@ -49,7 +65,12 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
       return response.text();
     }
   } catch (error) {
-    console.error('API call failed:', error);
+    console.error('❌ API call failed:', error);
+    console.error('❌ Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
     throw error;
   }
 };

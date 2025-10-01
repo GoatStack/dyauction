@@ -172,6 +172,11 @@ export default function CreateAuctionScreen() {
       const response = await fetch(uri);
       const blob = await response.blob();
       formData.append('auctionImage', blob, 'image.jpg');
+    } else if (uri.startsWith('blob:')) {
+      // Blob URI인 경우
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      formData.append('auctionImage', blob, 'image.jpg');
     } else {
       // 파일 URI인 경우
       formData.append('auctionImage', {
@@ -197,6 +202,12 @@ export default function CreateAuctionScreen() {
         console.log('📋 FormData 생성');
         const formData = await createFormData(imageUri);
         console.log('✅ FormData 생성 완료');
+        
+        // FormData 내용 확인
+        console.log('🔍 FormData 확인:');
+        for (const [key, value] of formData.entries()) {
+          console.log(`  ${key}:`, value);
+        }
         
         const workingUrl = await findWorkingApiUrl();
         console.log('🌐 이미지 업로드 URL:', `${workingUrl}/auctions/upload-image`);

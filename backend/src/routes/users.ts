@@ -230,6 +230,72 @@ router.put('/profile', auth, async (req: AuthRequest, res) => {
   }
 });
 
+// 학번 변경 요청
+router.post('/request-student-id-change', auth, async (req: AuthRequest, res) => {
+  try {
+    const db = getDatabase();
+    const userId = req.user?.userId;
+    const { newStudentId } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ error: '인증되지 않은 사용자입니다.' });
+    }
+
+    if (!newStudentId) {
+      return res.status(400).json({ error: '새 학번을 입력해주세요.' });
+    }
+
+    // 현재 사용자 정보 가져오기
+    const currentUser = db.prepare(`
+      SELECT student_id FROM users WHERE id = ?
+    `).get(userId) as any;
+
+    if (!currentUser) {
+      return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+    }
+
+    // 새 학번이 현재 학번과 같은지 확인
+    if (newStudentId === currentUser.student_id) {
+      return res.status(400).json({ error: '현재 학번과 동일합니다.' });
+    }
+
+    // 새 학번이 이미 사용 중인지 확인
+    const existingUser = db.prepare(`
+      SELECT id FROM users WHERE student_id = ?
+    `).get(newStudentId);
+
+    if (existingUser) {
+      return res.status(400).json({ error: '이미 사용 중인 학번입니다.' });
+    }
+
+    // 대기 중인 요청이 있는지 확인
+    const pendingRequest = db.prepare(`
+      SELECT id FROM student_id_change_requests 
+      WHERE user_id = ? AND status = 'pending'
+    `).get(userId);
+
+    if (pendingRequest) {
+      return res.status(400).json({ error: '이미 대기 중인 학번 변경 요청이 있습니다.' });
+    }
+
+    // 학번 변경 요청 생성
+    const result = db.prepare(`
+      INSERT INTO student_id_change_requests (user_id, current_student_id, new_student_id)
+      VALUES (?, ?, ?)
+    `).run(userId, currentUser.student_id, newStudentId);
+
+    console.log(`📝 학번 변경 요청 생성: 사용자 ${userId}, ${currentUser.student_id} → ${newStudentId}`);
+
+    res.json({ 
+      message: '학번 변경 요청이 제출되었습니다. 관리자 승인을 기다려주세요.',
+      requestId: result.lastInsertRowid
+    });
+  } catch (error) {
+    console.error('Failed to create student ID change request:', error);
+    res.status(500).json({ error: '학번 변경 요청에 실패했습니다.' });
+  }
+});
+
 // 비밀번호 변경
 router.post('/change-password', auth, async (req: AuthRequest, res) => {
   try {

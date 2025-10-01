@@ -14,8 +14,13 @@ export const migrateDatabase = () => {
     const hasApprovalStatus = tableInfo.some((col: any) => col.name === 'approval_status');
     const hasUserType = tableInfo.some((col: any) => col.name === 'user_type');
     
+    // 학번 변경 요청 테이블 존재 확인
+    const studentIdChangeRequestsExists = db.prepare(`
+      SELECT name FROM sqlite_master WHERE type='table' AND name='student_id_change_requests'
+    `).get();
+    
     // 이미 최신 스키마인 경우 마이그레이션 스킵
-    if (hasStudentId && hasApprovalStatus && hasUserType) {
+    if (hasStudentId && hasApprovalStatus && hasUserType && studentIdChangeRequestsExists) {
       console.log('✅ 데이터베이스가 이미 최신 상태입니다. 마이그레이션이 필요하지 않습니다.');
       return;
     }
@@ -71,6 +76,24 @@ export const migrateDatabase = () => {
     });
     
     console.log(`✅ ${oldUsers.length}명의 사용자 데이터 마이그레이션 완료`);
+    
+    // 학번 변경 요청 테이블 생성
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS student_id_change_requests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        current_student_id TEXT NOT NULL,
+        new_student_id TEXT NOT NULL,
+        status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'approved', 'rejected')),
+        admin_id INTEGER,
+        admin_comment TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id),
+        FOREIGN KEY (admin_id) REFERENCES users (id)
+      )
+    `);
+    console.log('✅ 학번 변경 요청 테이블 생성');
     
     // 백업 테이블 삭제
     db.exec('DROP TABLE users_backup');
