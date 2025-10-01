@@ -248,28 +248,66 @@ router.get('/images/:imageId', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const db = getDatabase();
+    const { type, userId } = req.query; // type: 'selling', 'bidding', 'all'
     
-    const auctions = db.prepare(`
-      SELECT 
-        a.id,
-        a.title,
-        a.description,
-        a.starting_price as startingPrice,
-        a.current_price as currentPrice,
-        a.end_time as endTime,
-        a.status,
-        a.created_at as createdAt,
-        a.images,
-        u.username as sellerName,
-        COUNT(b.id) as bidCount,
-        COUNT(DISTINCT b.bidder_id) as participantCount
-      FROM auctions a
-      LEFT JOIN users u ON a.seller_id = u.id
-      LEFT JOIN bids b ON a.id = b.auction_id
-      WHERE a.status = 'active'
-      GROUP BY a.id
-      ORDER BY a.created_at DESC
-    `).all();
+    let whereClause = "WHERE a.status = 'active'";
+    let joinClause = "LEFT JOIN users u ON a.seller_id = u.id LEFT JOIN bids b ON a.id = b.auction_id";
+    
+    if (type === 'selling' && userId) {
+      whereClause += ` AND a.seller_id = ${userId}`;
+    } else if (type === 'bidding' && userId) {
+      whereClause += ` AND a.id IN (SELECT DISTINCT auction_id FROM bids WHERE bidder_id = ${userId})`;
+      joinClause = "LEFT JOIN users u ON a.seller_id = u.id INNER JOIN bids b ON a.id = b.auction_id";
+    } else if (type === 'won' && userId) {
+      whereClause = "WHERE a.status = 'ended' AND a.winner_id = " + userId;
+    }
+    
+    let auctions;
+    
+    if (type === 'bidding' && userId) {
+      // 입찰한 경매는 서브쿼리로 처리
+      auctions = db.prepare(`
+        SELECT 
+          a.id,
+          a.title,
+          a.description,
+          a.starting_price as startingPrice,
+          a.current_price as currentPrice,
+          a.end_time as endTime,
+          a.status,
+          a.created_at as createdAt,
+          a.images,
+          u.username as sellerName,
+          (SELECT COUNT(*) FROM bids WHERE auction_id = a.id) as bidCount,
+          (SELECT COUNT(DISTINCT bidder_id) FROM bids WHERE auction_id = a.id) as participantCount
+        FROM auctions a
+        LEFT JOIN users u ON a.seller_id = u.id
+        WHERE a.status = 'active' AND a.id IN (SELECT DISTINCT auction_id FROM bids WHERE bidder_id = ?)
+        ORDER BY a.created_at DESC
+      `).all(userId);
+    } else {
+      // 일반 쿼리
+      auctions = db.prepare(`
+        SELECT 
+          a.id,
+          a.title,
+          a.description,
+          a.starting_price as startingPrice,
+          a.current_price as currentPrice,
+          a.end_time as endTime,
+          a.status,
+          a.created_at as createdAt,
+          a.images,
+          u.username as sellerName,
+          COUNT(b.id) as bidCount,
+          COUNT(DISTINCT b.bidder_id) as participantCount
+        FROM auctions a
+        ${joinClause}
+        ${whereClause}
+        GROUP BY a.id
+        ORDER BY a.created_at DESC
+      `).all();
+    }
     
     // 응답 데이터 형식 맞추기 (이미지 URL은 그대로 사용)
     const formattedAuctions = auctions.map((auction: any) => {
@@ -435,7 +473,7 @@ router.get('/:id', async (req, res) => {
     const auction = db.prepare(`
       SELECT a.*, u.username as seller_name 
       FROM auctions a 
-      JOIN users u ON a.seller_id = u.id 
+      LEFT JOIN users u ON a.seller_id = u.id 
       WHERE a.id = ?
     `).get(req.params.id) as any;
     
@@ -1332,6 +1370,88 @@ router.post('/test-email', auth, async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('Test email error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 사용자별 판매 중인 경매 조회
+router.get('/selling', auth, async (req: AuthRequest, res) => {
+  try {
+    const db = getDatabase();
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: '인증되지 않은 사용자입니다.' });
+    }
+
+    const auctions = db.prepare(`
+      SELECT a.*, u.username as seller_name,
+             COUNT(b.id) as bid_count,
+             COUNT(DISTINCT b.bidder_id) as participant_count
+      FROM auctions a
+      LEFT JOIN users u ON a.seller_id = u.id
+      LEFT JOIN bids b ON a.id = b.auction_id
+      WHERE a.seller_id = ? AND a.status = 'active'
+      GROUP BY a.id
+      ORDER BY a.created_at DESC
+    `).all(userId) as any[];
+
+    // 이미지 URL 처리
+    const processedAuctions = auctions.map(auction => ({
+      ...auction,
+      images: auction.images ? JSON.parse(auction.images) : [],
+      imageUrl: auction.images ? JSON.parse(auction.images)[0] : null,
+      seller: {
+        username: auction.seller_name
+      },
+      bidCount: auction.bid_count || 0,
+      participantCount: auction.participant_count || 0
+    }));
+
+    res.json(processedAuctions);
+  } catch (error) {
+    console.error('Failed to get selling auctions:', error);
+    res.status(500).json({ error: '판매 중인 경매를 가져오는데 실패했습니다.' });
+  }
+});
+
+// 사용자별 입찰한 경매 조회
+router.get('/bidding', auth, async (req: AuthRequest, res) => {
+  try {
+    const db = getDatabase();
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: '인증되지 않은 사용자입니다.' });
+    }
+
+    const auctions = db.prepare(`
+      SELECT DISTINCT a.*, u.username as seller_name,
+             COUNT(b.id) as bid_count,
+             COUNT(DISTINCT b.bidder_id) as participant_count
+      FROM auctions a
+      LEFT JOIN users u ON a.seller_id = u.id
+      LEFT JOIN bids b ON a.id = b.auction_id
+      WHERE b.bidder_id = ? AND a.status = 'active'
+      GROUP BY a.id
+      ORDER BY a.created_at DESC
+    `).all(userId) as any[];
+
+    // 이미지 URL 처리
+    const processedAuctions = auctions.map(auction => ({
+      ...auction,
+      images: auction.images ? JSON.parse(auction.images) : [],
+      imageUrl: auction.images ? JSON.parse(auction.images)[0] : null,
+      seller: {
+        username: auction.seller_name
+      },
+      bidCount: auction.bid_count || 0,
+      participantCount: auction.participant_count || 0
+    }));
+
+    res.json(processedAuctions);
+  } catch (error) {
+    console.error('Failed to get bidding auctions:', error);
+    res.status(500).json({ error: '입찰한 경매를 가져오는데 실패했습니다.' });
   }
 });
 

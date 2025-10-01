@@ -19,7 +19,7 @@ initDatabase();
 
 // 미들웨어
 app.use(cors({
-  origin: true, // 모든 도메인에서 접근 허용
+  origin: ['http://localhost:8081', 'http://localhost:3000', 'http://localhost:19006', 'exp://192.168.0.36:8081'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
@@ -27,7 +27,17 @@ app.use(cors({
 
 // 추가 CORS 헤더 설정
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  if (origin && (
+    origin.includes('localhost') || 
+    origin.includes('192.168.') || 
+    origin.includes('10.0.2.2') ||
+    origin.includes('exp://')
+  )) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
+  }
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
@@ -40,25 +50,16 @@ app.use((req, res, next) => {
 });
 // 커스텀 body-parser 설정
 app.use((req, res, next) => {
-  console.log('📏 요청 Content-Type:', req.headers['content-type']);
-  console.log('📏 요청 Content-Length:', req.headers['content-length']);
-  
   if (req.headers['content-type']?.includes('application/json')) {
     express.json({ 
       limit: '100mb',
-      type: 'application/json',
-      verify: (req, res, buf) => {
-        console.log('📏 JSON 요청 크기:', buf.length, 'bytes');
-      }
+      type: 'application/json'
     })(req, res, next);
   } else if (req.headers['content-type']?.includes('application/x-www-form-urlencoded')) {
     express.urlencoded({ 
       extended: true, 
       limit: '100mb',
-      type: 'application/x-www-form-urlencoded',
-      verify: (req, res, buf) => {
-        console.log('📏 URL-encoded 요청 크기:', buf.length, 'bytes');
-      }
+      type: 'application/x-www-form-urlencoded'
     })(req, res, next);
   } else {
     next();

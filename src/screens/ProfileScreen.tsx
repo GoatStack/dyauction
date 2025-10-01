@@ -51,15 +51,12 @@ export default function ProfileScreen() {
       console.log('🔑 토큰 내용:', (global as any).token.substring(0, 30) + '...');
     }
     
-    // 모든 데이터를 병렬로 로드하여 속도 향상
+    // 모든 데이터를 순차적으로 로드
     const loadAllData = async () => {
       try {
-        await Promise.all([
-          loadUserProfile(),
-          loadUserStats(),
-          loadAuctionData('selling')
-        ]);
-        console.log('✅ 모든 데이터 로드 완료');
+        await loadUserProfile();
+        await loadUserStats();
+        console.log('✅ 기본 데이터 로드 완료');
       } catch (error) {
         console.error('❌ 데이터 로드 중 오류:', error);
       }
@@ -67,6 +64,13 @@ export default function ProfileScreen() {
     
     loadAllData();
   }, []);
+
+  // user가 로드된 후 경매 데이터 로드
+  useEffect(() => {
+    if (user?.id) {
+      loadAuctionData('selling');
+    }
+  }, [user?.id]);
 
   // EditProfile에서 돌아올 때 데이터 새로고침
   useEffect(() => {
@@ -182,13 +186,15 @@ export default function ProfileScreen() {
   // 실제 경매 데이터 로딩 함수
   const loadAuctionData = async (tab: 'selling' | 'bidding' | 'won') => {
     try {
-      console.log(`🏷️ ${tab} 경매 데이터 로드 시작...`);
+      if (!user?.id) {
+        return;
+      }
       
       // 경매 데이터 가져오기 (5초 타임아웃)
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch(`http://40.82.159.69:65000/api/users/auctions/${tab}`, {
+      const response = await fetch(`http://40.82.159.69:65000/api/auctions?type=${tab}&userId=${user?.id}`, {
         headers: { 
           'Authorization': `Bearer ${token || 'test-token'}`,
           'Content-Type': 'application/json'
@@ -198,11 +204,8 @@ export default function ProfileScreen() {
       
       clearTimeout(timeoutId);
       
-      console.log(`📥 ${tab} 경매 API 응답:`, response.status, response.statusText);
-      
       if (response.ok) {
         const data = await response.json();
-        console.log(`✅ ${tab} 경매 데이터 성공:`, data);
         
         // 데이터 변환 (API 응답을 AuctionItem 형태로 변환)
         const transformedData = data.map((auction: any) => ({
@@ -224,12 +227,10 @@ export default function ProfileScreen() {
         
         setMyAuctions(transformedData);
       } else {
-        console.error(`❌ ${tab} 경매 API 호출 실패:`, response.status, response.statusText);
         setMyAuctions([]);
       }
     } catch (error) {
-      console.error('Failed to load auction data:', error);
-      // 에러 시 빈 배열로 설정
+      console.error('경매 데이터 로드 실패:', error.message);
       setMyAuctions([]);
     }
   };
@@ -467,13 +468,13 @@ export default function ProfileScreen() {
             >
               <Text style={[styles.tabText, activeTab === 'selling' && styles.activeTabText]}>판매중</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.tabItem, activeTab === 'bidding' && styles.activeTab]}
               onPress={() => handleTabChange('bidding')}
             >
               <Text style={[styles.tabText, activeTab === 'bidding' && styles.activeTabText]}>입찰중</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.tabItem, activeTab === 'won' && styles.activeTab]}
               onPress={() => handleTabChange('won')}
             >

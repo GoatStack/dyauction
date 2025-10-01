@@ -195,23 +195,11 @@ export default function CreateAuctionScreen() {
     
     for (const imageUri of imageUris) {
       try {
-        console.log('📤 이미지 업로드 시작:', imageUri.substring(0, 50) + '...');
-        console.log('🔍 이미지 URI 시작 부분:', imageUri.substring(0, 20));
         
         // FormData 생성
-        console.log('📋 FormData 생성');
         const formData = await createFormData(imageUri);
-        console.log('✅ FormData 생성 완료');
-        
-        // FormData 내용 확인
-        console.log('🔍 FormData 확인:');
-        for (const [key, value] of formData.entries()) {
-          console.log(`  ${key}:`, value);
-        }
         
         const workingUrl = await findWorkingApiUrl();
-        console.log('🌐 이미지 업로드 URL:', `${workingUrl}/auctions/upload-image`);
-        console.log('🔑 사용할 토큰:', token ? '토큰 있음' : '토큰 없음');
         
         const response = await fetch(`${workingUrl}/auctions/upload-image`, {
           method: 'POST',
@@ -221,26 +209,20 @@ export default function CreateAuctionScreen() {
           },
           body: formData,
         });
-        
-        console.log('📡 응답 상태:', response.status, response.statusText);
 
         if (response.ok) {
           const result = await response.json();
-          console.log('✅ 이미지 업로드 성공:', result.imageUrl);
-          console.log('🔍 workingUrl:', workingUrl);
-          console.log('🔍 백엔드에서 받은 imageUrl:', result.imageUrl);
           
           // 백엔드에서 반환하는 imageUrl이 /images/{imageId} 형태이므로 workingUrl과 결합
           const imageUrl = `${workingUrl}${result.imageUrl}`;
-          console.log('🔗 최종 이미지 URL:', imageUrl);
           uploadedUrls.push(imageUrl);
         } else {
           const errorText = await response.text();
-          console.error('❌ 이미지 업로드 실패:', errorText);
+          console.error('이미지 업로드 실패:', errorText);
           throw new Error(`이미지 업로드 실패: ${response.status}`);
         }
       } catch (error) {
-        console.error('❌ 이미지 업로드 오류:', error);
+        console.error('이미지 업로드 오류:', error.message);
         throw error;
       }
     }

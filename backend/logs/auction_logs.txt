@@ -87,3 +87,14 @@
 [2025-09-26T07:22:34.785Z] approved | Auction: 11 | User: 8 | Details: {"startTime":"2025-09-26T07:22:34.746Z","endTime":"2025-09-27T07:22:34.746Z","duration":1440}
 [2025-10-01T10:31:07.567Z] created | Auction: 16 | User: 8 | Details: {"title":"ㅁㄴㅇㅁㄴㅇ","category":"의류","startingPrice":3123,"duration":"1h","status":"pending"}
 [2025-10-01T10:31:38.751Z] approved | Auction: 16 | User: 8 | Details: {"startTime":"2025-10-01T10:31:38.703Z","endTime":"2025-10-01T11:31:38.703Z","duration":60}
+[2025-10-01T11:16:31.570Z] set_hot | Auction: 16 | User: 3 | Details: {"auctionTitle":"ㅁㄴㅇㅁㄴㅇ","isHot":true}
+[2025-10-01T11:16:31.806Z] unset_hot | Auction: 16 | User: 3 | Details: {"auctionTitle":"ㅁㄴㅇㅁㄴㅇ","isHot":false}
+[2025-10-01T11:16:31.838Z] unset_hot | Auction: 16 | User: 3 | Details: {"auctionTitle":"ㅁㄴㅇㅁㄴㅇ","isHot":false}
+[2025-10-01T11:16:33.623Z] set_hot | Auction: 16 | User: 3 | Details: {"auctionTitle":"ㅁㄴㅇㅁㄴㅇ","isHot":true}
+[2025-10-01T11:16:34.068Z] set_hot | Auction: 16 | User: 3 | Details: {"auctionTitle":"ㅁㄴㅇㅁㄴㅇ","isHot":true}
+[2025-10-01T11:16:34.236Z] set_hot | Auction: 16 | User: 3 | Details: {"auctionTitle":"ㅁㄴㅇㅁㄴㅇ","isHot":true}
+[2025-10-01T11:16:34.483Z] set_hot | Auction: 16 | User: 3 | Details: {"auctionTitle":"ㅁㄴㅇㅁㄴㅇ","isHot":true}
+[2025-10-01T11:16:35.264Z] set_hot | Auction: 16 | User: 3 | Details: {"auctionTitle":"ㅁㄴㅇㅁㄴㅇ","isHot":true}
+[2025-10-01T11:16:36.215Z] set_hot | Auction: 16 | User: 3 | Details: {"auctionTitle":"ㅁㄴㅇㅁㄴㅇ","isHot":true}
+[2025-10-01T11:18:47.315Z] created | Auction: 17 | User: 8 | Details: {"title":"고양이판매","category":"도서","startingPrice":1250,"duration":"1d","status":"pending"}
+[2025-10-01T11:19:06.417Z] approved | Auction: 17 | User: 8 | Details: {"startTime":"2025-10-01T11:19:06.378Z","endTime":"2025-10-02T11:19:06.378Z","duration":1440}

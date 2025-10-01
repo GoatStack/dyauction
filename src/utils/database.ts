@@ -8,14 +8,9 @@ const API_BASE_URL = __DEV__
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
   
-  console.log('🌐 API 호출:', url, options.method || 'GET');
-  console.log('🔍 API_BASE_URL:', API_BASE_URL);
-  console.log('🔍 endpoint:', endpoint);
-  
   try {
     // 저장된 토큰 가져오기
     const token = (global as any).token;
-    console.log('🔑 저장된 토큰:', token ? '있음' : '없음');
     
     // FormData인 경우 Content-Type 헤더를 자동으로 설정하도록 함
     const headers = options.body instanceof FormData 
@@ -29,20 +24,12 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
           ...options.headers 
         };
     
-    console.log('📤 요청 헤더:', headers);
-    if (options.body) {
-      console.log('📤 요청 본문 타입:', options.body instanceof FormData ? 'FormData' : 'JSON');
-    }
-    
     const response = await fetch(url, {
       headers,
       ...options,
       // HTTP 요청 허용을 위한 설정
       mode: 'cors',
-      credentials: 'include',
     });
-    
-    console.log('📥 응답 상태:', response.status, response.statusText);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -65,12 +52,7 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
       return response.text();
     }
   } catch (error) {
-    console.error('❌ API call failed:', error);
-    console.error('❌ Error details:', {
-      name: error.name,
-      message: error.message,
-      stack: error.stack
-    });
+    console.error('API 호출 실패:', error.message);
     throw error;
   }
 };
@@ -83,10 +65,8 @@ export const initDatabase = async (): Promise<void> => {
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-    const data = await response.json();
-    console.log('Backend server connected successfully:', data);
   } catch (error) {
-    console.error('Backend server connection failed:', error);
+    console.error('백엔드 서버 연결 실패:', error.message);
     throw error;
   }
 };
