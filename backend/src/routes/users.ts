@@ -96,7 +96,7 @@ router.get('/profile', auth, async (req: AuthRequest, res) => {
     }
 
     const user = db.prepare(`
-      SELECT id, username, email, student_id, verification_status, created_at, user_type, profile_image
+      SELECT id, username, email, student_id, approval_status, created_at, user_type, profile_image
       FROM users 
       WHERE id = ?
     `).get(userId) as any;
@@ -110,7 +110,7 @@ router.get('/profile', auth, async (req: AuthRequest, res) => {
       name: user.username,
       email: user.email,
       studentId: user.student_id,
-      verificationStatus: user.verification_status,
+      verificationStatus: user.approval_status,
       createdAt: user.created_at,
       isAdmin: user.user_type === 'admin',
       profileImage: user.profile_image,
@@ -293,6 +293,115 @@ router.post('/request-student-id-change', auth, async (req: AuthRequest, res) =>
   } catch (error) {
     console.error('Failed to create student ID change request:', error);
     res.status(500).json({ error: '학번 변경 요청에 실패했습니다.' });
+  }
+});
+
+// 관리자용 학번 변경 요청 목록 조회
+router.get('/student-id-change-requests', auth, async (req: AuthRequest, res) => {
+  try {
+    const db = getDatabase();
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: '인증되지 않은 사용자입니다.' });
+    }
+
+    // 관리자 권한 확인
+    const user = db.prepare(`
+      SELECT user_type FROM users WHERE id = ?
+    `).get(userId) as any;
+
+    if (!user || user.user_type !== 'admin') {
+      return res.status(403).json({ error: '관리자 권한이 필요합니다.' });
+    }
+
+    // 대기 중인 학번 변경 요청 목록 조회
+    const requests = db.prepare(`
+      SELECT 
+        r.id,
+        r.user_id,
+        r.current_student_id,
+        r.new_student_id,
+        r.status,
+        r.created_at,
+        u.username,
+        u.email
+      FROM student_id_change_requests r
+      JOIN users u ON r.user_id = u.id
+      WHERE r.status = 'pending'
+      ORDER BY r.created_at DESC
+    `).all();
+
+    res.json(requests);
+  } catch (error) {
+    console.error('Failed to get student ID change requests:', error);
+    res.status(500).json({ error: '학번 변경 요청 목록을 가져오는데 실패했습니다.' });
+  }
+});
+
+// 관리자용 학번 변경 요청 승인/거부
+router.post('/approve-student-id-change/:requestId', auth, async (req: AuthRequest, res) => {
+  try {
+    const db = getDatabase();
+    const adminId = req.user?.userId;
+    const { requestId } = req.params;
+    const { action, comment } = req.body; // action: 'approve' or 'reject'
+
+    if (!adminId) {
+      return res.status(401).json({ error: '인증되지 않은 사용자입니다.' });
+    }
+
+    // 관리자 권한 확인
+    const admin = db.prepare(`
+      SELECT user_type FROM users WHERE id = ?
+    `).get(adminId) as any;
+
+    if (!admin || admin.user_type !== 'admin') {
+      return res.status(403).json({ error: '관리자 권한이 필요합니다.' });
+    }
+
+    if (!action || !['approve', 'reject'].includes(action)) {
+      return res.status(400).json({ error: '올바른 액션을 선택해주세요. (approve 또는 reject)' });
+    }
+
+    // 요청 정보 가져오기
+    const request = db.prepare(`
+      SELECT * FROM student_id_change_requests WHERE id = ? AND status = 'pending'
+    `).get(requestId) as any;
+
+    if (!request) {
+      return res.status(404).json({ error: '대기 중인 요청을 찾을 수 없습니다.' });
+    }
+
+    const newStatus = action === 'approve' ? 'approved' : 'rejected';
+
+    // 요청 상태 업데이트
+    db.prepare(`
+      UPDATE student_id_change_requests 
+      SET status = ?, admin_id = ?, admin_comment = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(newStatus, adminId, comment || null, requestId);
+
+    if (action === 'approve') {
+      // 학번 변경 승인 시 실제 사용자 학번 업데이트
+      db.prepare(`
+        UPDATE users 
+        SET student_id = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(request.new_student_id, request.user_id);
+
+      console.log(`✅ 학번 변경 승인: 사용자 ${request.user_id}, ${request.current_student_id} → ${request.new_student_id}`);
+    } else {
+      console.log(`❌ 학번 변경 거부: 사용자 ${request.user_id}, ${request.current_student_id} → ${request.new_student_id}`);
+    }
+
+    res.json({ 
+      message: `학번 변경 요청이 ${action === 'approve' ? '승인' : '거부'}되었습니다.`,
+      status: newStatus
+    });
+  } catch (error) {
+    console.error('Failed to process student ID change request:', error);
+    res.status(500).json({ error: '학번 변경 요청 처리에 실패했습니다.' });
   }
 });
 

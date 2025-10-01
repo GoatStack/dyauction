@@ -40,10 +40,62 @@ export default function EditProfileScreen() {
   });
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [newStudentId, setNewStudentId] = useState('');
+  const [isRequestingStudentIdChange, setIsRequestingStudentIdChange] = useState(false);
 
   useEffect(() => {
     loadUserProfile();
   }, []);
+
+  const requestStudentIdChange = async () => {
+    if (!newStudentId.trim()) {
+      Alert.alert('오류', '새 학번을 입력해주세요.');
+      return;
+    }
+
+    if (newStudentId === user?.studentId) {
+      Alert.alert('오류', '현재 학번과 동일합니다.');
+      return;
+    }
+
+    try {
+      setIsRequestingStudentIdChange(true);
+      
+      const token = (global as any).token;
+      if (!token) {
+        Alert.alert('오류', '로그인이 필요합니다.');
+        return;
+      }
+
+      const response = await fetch(getApiUrl('/users/request-student-id-change'), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          newStudentId: newStudentId.trim()
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        Alert.alert(
+          '요청 제출 완료',
+          '학번 변경 요청이 제출되었습니다. 관리자 승인을 기다려주세요.',
+          [{ text: '확인', onPress: () => setNewStudentId('') }]
+        );
+      } else {
+        Alert.alert('오류', result.error || '학번 변경 요청에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Failed to request student ID change:', error);
+      Alert.alert('오류', '학번 변경 요청 중 오류가 발생했습니다.');
+    } finally {
+      setIsRequestingStudentIdChange(false);
+    }
+  };
 
   const loadUserProfile = async () => {
     try {
@@ -334,6 +386,36 @@ export default function EditProfileScreen() {
               disabled={true}
               left={<TextInput.Icon icon="card-account-details" color="#999" />}
             />
+            
+            {/* 학번 변경 요청 섹션 */}
+            <View style={styles.studentIdChangeSection}>
+              <Text style={styles.sectionTitle}>학번 변경 요청</Text>
+              <Text style={styles.sectionDescription}>
+                학번 변경이 필요한 경우 관리자 승인을 받아야 합니다.
+              </Text>
+              
+              <View style={styles.studentIdChangeForm}>
+                <TextInput
+                  label="새 학번"
+                  value={newStudentId}
+                  onChangeText={setNewStudentId}
+                  style={styles.input}
+                  mode="outlined"
+                  placeholder="변경할 학번을 입력하세요"
+                  left={<TextInput.Icon icon="card-account-details" />}
+                />
+                
+                <Button
+                  mode="contained"
+                  onPress={requestStudentIdChange}
+                  loading={isRequestingStudentIdChange}
+                  disabled={isRequestingStudentIdChange || !newStudentId.trim()}
+                  style={styles.changeRequestButton}
+                >
+                  {isRequestingStudentIdChange ? '요청 중...' : '변경 요청 제출'}
+                </Button>
+              </View>
+            </View>
 
             <Divider style={styles.divider} />
             
@@ -585,5 +667,25 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#1976d2',
     fontWeight: '500',
+  },
+  studentIdChangeSection: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  sectionDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  studentIdChangeForm: {
+    gap: 12,
+  },
+  changeRequestButton: {
+    marginTop: 8,
   },
 });
