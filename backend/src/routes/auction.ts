@@ -68,7 +68,6 @@ const autoEndExpiredAuctions = async () => {
       WHERE a.status = 'active' AND a.end_time <= ?
     `).all(now);
     
-    console.log(`🕐 자동 종료 체크: ${expiredAuctions.length}개 경매 발견`);
     
     for (const auction of expiredAuctions) {
       const auctionData = auction as any;
@@ -76,7 +75,6 @@ const autoEndExpiredAuctions = async () => {
       // 경매 상태를 종료로 변경
       db.prepare('UPDATE auctions SET status = ? WHERE id = ?').run('ended', auctionData.id);
       
-      console.log(`✅ 경매 자동 종료: ${auctionData.title} (ID: ${auctionData.id})`);
       
       // 낙찰자와 판매자에게 알림 전송
       if (auctionData.current_price > auctionData.starting_price) {
@@ -757,9 +755,7 @@ router.patch('/:id/approve', auth, async (req: AuthRequest, res) => {
           auctionInfo.title,
           Number(req.params.id)
         );
-        console.log(`✅ 경매 승인 알림 이메일 발송: ${auctionInfo.email} - ${auctionInfo.title}`);
       } catch (error) {
-        console.error('승인 알림 이메일 발송 실패:', error);
       }
     }
     

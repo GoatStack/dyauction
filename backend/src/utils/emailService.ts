@@ -78,10 +78,8 @@ export const sendWinNotificationEmail = async (
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('낙찰 알림 이메일 발송 성공:', info.messageId);
     return true;
   } catch (error) {
-    console.error('낙찰 알림 이메일 발송 실패:', error);
     return false;
   }
 };
@@ -135,10 +133,8 @@ export const sendApprovalNotificationEmail = async (
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('승인 알림 이메일 발송 성공:', info.messageId);
     return true;
   } catch (error) {
-    console.error('승인 알림 이메일 발송 실패:', error);
     return false;
   }
 };
@@ -192,10 +188,8 @@ export const sendHotAuctionNotificationEmail = async (
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('핫한 경매 알림 이메일 발송 성공:', info.messageId);
     return true;
   } catch (error) {
-    console.error('핫한 경매 알림 이메일 발송 실패:', error);
     return false;
   }
 };

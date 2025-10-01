@@ -45,20 +45,13 @@ export default function ProfileScreen() {
   // Mock 데이터 제거 - 실제 API 데이터만 사용
 
   useEffect(() => {
-    console.log('🚀 ProfileScreen 마운트됨');
-    console.log('🔑 현재 global.token 상태:', (global as any).token ? '토큰 있음' : '토큰 없음');
-    if ((global as any).token) {
-      console.log('🔑 토큰 내용:', (global as any).token.substring(0, 30) + '...');
-    }
-    
     // 모든 데이터를 순차적으로 로드
     const loadAllData = async () => {
       try {
         await loadUserProfile();
         await loadUserStats();
-        console.log('✅ 기본 데이터 로드 완료');
       } catch (error) {
-        console.error('❌ 데이터 로드 중 오류:', error);
+        console.error('데이터 로드 중 오류:', error.message);
       }
     };
     
@@ -85,9 +78,6 @@ export default function ProfileScreen() {
   // 실제 사용자 프로필 정보 로드
   const loadUserProfile = async () => {
     try {
-      console.log('🔍 프로필 정보 로드 시작...');
-      console.log('🔑 현재 토큰:', (global as any).token ? '토큰 있음' : '토큰 없음');
-      
       // 로그인된 사용자 정보 가져오기 (5초 타임아웃)
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -102,11 +92,8 @@ export default function ProfileScreen() {
       
       clearTimeout(timeoutId);
       
-      console.log('📥 프로필 API 응답:', response.status, response.statusText);
-      
       if (response.ok) {
         const userData = await response.json();
-        console.log('✅ 프로필 데이터 성공:', userData);
         setUser({
           id: userData.id,
           studentId: userData.studentId,
@@ -119,13 +106,10 @@ export default function ProfileScreen() {
           profileImage: userData.profileImage,
         });
       } else {
-        // API 호출 실패 시 빈 상태로 설정
-        console.log('❌ 프로필 API 호출 실패:', response.status);
         setUser(null);
       }
     } catch (error) {
-      console.error('Failed to load user profile:', error);
-      // 에러 시 빈 상태로 설정
+      console.error('프로필 로드 중 오류:', error.message);
       setUser(null);
     }
   };
@@ -133,7 +117,6 @@ export default function ProfileScreen() {
   // 실제 사용자 통계 정보 로드
   const loadUserStats = async () => {
     try {
-      console.log('📊 통계 정보 로드 시작...');
       
       // 통계 정보 가져오기 (5초 타임아웃)
       const controller = new AbortController();
@@ -149,15 +132,12 @@ export default function ProfileScreen() {
       
       clearTimeout(timeoutId);
       
-      console.log('📥 통계 API 응답:', response.status, response.statusText);
       
       if (response.ok) {
         const statsData = await response.json();
-        console.log('✅ 통계 데이터 성공:', statsData);
         setStats(statsData);
       } else {
         // API 호출 실패 시 빈 상태로 설정
-        console.log('❌ 통계 API 호출 실패:', response.status);
         setStats({
           sales: 0,
           bids: 0,
@@ -165,7 +145,7 @@ export default function ProfileScreen() {
         });
       }
     } catch (error) {
-      console.error('Failed to load user stats:', error);
+      console.error('통계 로드 중 오류:', error.message);
       // 에러 시 빈 상태로 설정
       setStats({
         sales: 0,
