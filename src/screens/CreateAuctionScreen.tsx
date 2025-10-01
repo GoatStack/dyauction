@@ -22,6 +22,7 @@ import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { getApiUrl, findWorkingApiUrl } from '../config/api';
 import { notificationManager } from '../utils/notificationManager';
+import { useAuth } from '../contexts/AuthContext';
 
 interface AuctionForm {
   title: string;
@@ -34,6 +35,7 @@ interface AuctionForm {
 
 export default function CreateAuctionScreen() {
   const navigation = useNavigation<any>();
+  const { token } = useAuth();
   const [loading, setLoading] = useState(false);
   const categorySelectorRef = React.useRef<any>(null);
   const durationSelectorRef = React.useRef<any>(null);
@@ -151,7 +153,7 @@ export default function CreateAuctionScreen() {
   const checkNetworkStatus = async () => {
     try {
       const workingUrl = await findWorkingApiUrl();
-      const response = await fetch(`${workingUrl}/api/health`, { 
+      const response = await fetch(`${workingUrl}/health`, { 
         method: 'GET'
       });
       return response.ok;
@@ -161,34 +163,66 @@ export default function CreateAuctionScreen() {
     }
   };
 
+  // 파일 URI를 FormData로 변환하는 함수
+  const createFormData = async (uri: string): Promise<FormData> => {
+    const formData = new FormData();
+    
+    if (uri.startsWith('data:image/')) {
+      // Base64 데이터를 Blob으로 변환
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      formData.append('auctionImage', blob, 'image.jpg');
+    } else {
+      // 파일 URI인 경우
+      formData.append('auctionImage', {
+        uri: uri,
+        type: 'image/jpeg',
+        name: 'image.jpg'
+      } as any);
+    }
+    
+    return formData;
+  };
+
   // 이미지 업로드 함수
   const uploadImages = async (imageUris: string[]): Promise<string[]> => {
     const uploadedUrls: string[] = [];
     
     for (const imageUri of imageUris) {
       try {
-        console.log('📤 이미지 업로드 시작:', imageUri);
+        console.log('📤 이미지 업로드 시작:', imageUri.substring(0, 50) + '...');
+        console.log('🔍 이미지 URI 시작 부분:', imageUri.substring(0, 20));
         
-        const formData = new FormData();
-        formData.append('auctionImage', {
-          uri: imageUri,
-          type: 'image/jpeg',
-          name: `auction_${Date.now()}.jpg`,
-        } as any);
-
+        // FormData 생성
+        console.log('📋 FormData 생성');
+        const formData = await createFormData(imageUri);
+        console.log('✅ FormData 생성 완료');
+        
         const workingUrl = await findWorkingApiUrl();
-        const response = await fetch(`${workingUrl}/api/auctions/upload-image`, {
+        console.log('🌐 이미지 업로드 URL:', `${workingUrl}/auctions/upload-image`);
+        console.log('🔑 사용할 토큰:', token ? '토큰 있음' : '토큰 없음');
+        
+        const response = await fetch(`${workingUrl}/auctions/upload-image`, {
           method: 'POST',
           headers: { 
-            'Authorization': `Bearer ${(global as any).token || 'test-token'}`,
+            'Authorization': `Bearer ${token || 'test-token'}`,
+            // Content-Type은 FormData일 때 자동으로 설정됨
           },
           body: formData,
         });
+        
+        console.log('📡 응답 상태:', response.status, response.statusText);
 
         if (response.ok) {
           const result = await response.json();
           console.log('✅ 이미지 업로드 성공:', result.imageUrl);
-          uploadedUrls.push(result.imageUrl);
+          console.log('🔍 workingUrl:', workingUrl);
+          console.log('🔍 백엔드에서 받은 imageUrl:', result.imageUrl);
+          
+          // 백엔드에서 반환하는 imageUrl이 /images/{imageId} 형태이므로 workingUrl과 결합
+          const imageUrl = `${workingUrl}${result.imageUrl}`;
+          console.log('🔗 최종 이미지 URL:', imageUrl);
+          uploadedUrls.push(imageUrl);
         } else {
           const errorText = await response.text();
           console.error('❌ 이미지 업로드 실패:', errorText);
@@ -224,11 +258,14 @@ export default function CreateAuctionScreen() {
       
       // 경매 등록 API 호출
       const workingUrl = await findWorkingApiUrl();
-      const response = await fetch(`${workingUrl}/api/auctions`, {
+      console.log('🌐 경매 등록 API 호출 주소:', workingUrl);
+      console.log('📡 경매 등록 요청 URL:', `${workingUrl}/auctions`);
+      
+      const response = await fetch(`${workingUrl}/auctions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(global as any).token}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
         title: formData.title,

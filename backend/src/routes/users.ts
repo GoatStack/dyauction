@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { getImageUrl, processImageUrls, formatAuctionImages } from '../utils/imageUtils';
 
 const router = express.Router();
 
@@ -358,37 +359,14 @@ router.get('/auctions/:type', auth, async (req: AuthRequest, res) => {
       `).all(userId);
     }
 
-    // 응답 데이터 형식 맞추기
+    // 응답 데이터 형식 맞추기 - 유틸리티 함수 사용
     const formattedAuctions = auctions.map((auction: any) => {
       // 실제 이미지 URL 가져오기
       const auctionWithImages = db.prepare(`
         SELECT images FROM auctions WHERE id = ?
       `).get(auction.id) as any;
       
-      let imageUrl = 'https://via.placeholder.com/400x300/cccccc/666666?text=이미지+없음';
-      
-      if (auctionWithImages && auctionWithImages.images) {
-        try {
-          const images = JSON.parse(auctionWithImages.images);
-          if (images && images.length > 0) {
-            const firstImage = images[0];
-            if (firstImage.startsWith('http://192.168.0.36:3000/uploads/')) {
-              // 이미 완전한 URL인 경우
-              imageUrl = firstImage;
-            } else if (firstImage.startsWith('file://')) {
-              const filename = firstImage.split('/').pop();
-              imageUrl = `http://192.168.0.36:3000/uploads/${filename}`;
-            } else if (firstImage.includes('.jpg') || firstImage.includes('.png') || firstImage.includes('.jpeg')) {
-              // 파일명만 있는 경우
-              imageUrl = `http://192.168.0.36:3000/uploads/${firstImage}`;
-            } else if (firstImage.startsWith('http')) {
-              imageUrl = firstImage;
-            }
-          }
-        } catch (error) {
-          console.error('이미지 파싱 오류:', error);
-        }
-      }
+      const formattedAuction = formatAuctionImages(auctionWithImages);
       
       return {
         id: auction.id,
@@ -399,7 +377,7 @@ router.get('/auctions/:type', auth, async (req: AuthRequest, res) => {
         endTime: auction.endTime,
         status: auction.status,
         createdAt: auction.createdAt,
-        imageUrl: imageUrl,
+        imageUrl: formattedAuction.imageUrl,
         sellerId: userId,
         sellerName: req.user?.username || '사용자',
         bids: [],

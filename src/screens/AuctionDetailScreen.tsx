@@ -24,46 +24,14 @@ import Slider from '@react-native-community/slider';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { notificationManager } from '../utils/notificationManager';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { normalizeImageUrl, formatAuctionImages } from '../utils/imageUtils';
+import { findWorkingApiUrl } from '../config/api';
 
 const { width, height } = Dimensions.get('window');
 
-// 이미지 URL 변환 함수
+// 이미지 URL 변환 함수 - 유틸리티 함수 사용
 const convertImageUrl = (imageUrl: any): string => {
-  // undefined, null 체크
-  if (!imageUrl) {
-    return 'https://via.placeholder.com/400x300/cccccc/666666?text=이미지+없음';
-  }
-  
-  // 배열인 경우 첫 번째 요소 사용
-  if (Array.isArray(imageUrl)) {
-    if (imageUrl.length > 0 && typeof imageUrl[0] === 'string') {
-      return convertImageUrl(imageUrl[0]);
-    }
-    return 'https://via.placeholder.com/400x300/cccccc/666666?text=이미지+없음';
-  }
-  
-  // 문자열이 아닌 경우
-  if (typeof imageUrl !== 'string') {
-    return 'https://via.placeholder.com/400x300/cccccc/666666?text=이미지+없음';
-  }
-  
-  // 이미 웹 URL인 경우 그대로 사용
-  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-    return imageUrl;
-  }
-  
-  // 로컬 파일 경로인 경우 웹 URL로 변환
-  if (imageUrl.startsWith('file://')) {
-    const filename = imageUrl.split('/').pop();
-    return `http://192.168.0.36:3000/uploads/${filename}`;
-  }
-  
-  // 파일명만 있는 경우
-  if (imageUrl.includes('.jpg') || imageUrl.includes('.png') || imageUrl.includes('.jpeg')) {
-    return `http://192.168.0.36:3000/uploads/${imageUrl}`;
-  }
-  
-  return imageUrl;
+  return normalizeImageUrl(imageUrl);
 };
 
 interface Auction {
@@ -109,6 +77,9 @@ export default function AuctionDetailScreen() {
   });
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isOwnAuction, setIsOwnAuction] = useState(false);
+  
+  // API URL 설정
+  const workingUrl = 'http://40.82.159.69:65000/api';
 
   useEffect(() => {
     loadAuctionDetail();
@@ -143,7 +114,7 @@ export default function AuctionDetailScreen() {
     const interval = setInterval(async () => {
       // 실제 API 호출로 최신 데이터 가져오기
       try {
-        const response = await fetch(`http://192.168.0.36:3000/api/auctions/${auctionId}`);
+        const response = await fetch(`${workingUrl}/auctions/${auctionId}`);
         if (response.ok) {
           const auctionData = await response.json();
           const bids = auctionData.bids || [];
@@ -209,8 +180,10 @@ export default function AuctionDetailScreen() {
     try {
       setLoading(true);
       
-      // 실제 API 호출
-      const response = await fetch(`http://192.168.0.36:3000/api/auctions/${auctionId}`);
+      console.log('🌐 경매 상세 API 호출 주소:', workingUrl);
+      console.log('📡 경매 상세 요청 URL:', `${workingUrl}/auctions/${auctionId}`);
+      
+      const response = await fetch(`${workingUrl}/auctions/${auctionId}`);
       
       if (response.ok) {
         const auctionData = await response.json();
@@ -286,7 +259,19 @@ export default function AuctionDetailScreen() {
       }
     } catch (error) {
       console.error('경매 상세 정보 로드 실패:', error);
-      Alert.alert('오류', '경매 정보를 불러올 수 없습니다.');
+      console.error('오류 상세:', error.message);
+      
+      // 더 구체적인 오류 메시지
+      let errorMessage = '경매 정보를 불러올 수 없습니다.';
+      if (error.message.includes('Network')) {
+        errorMessage = '네트워크 연결을 확인해주세요.';
+      } else if (error.message.includes('404')) {
+        errorMessage = '경매를 찾을 수 없습니다.';
+      } else if (error.message.includes('500')) {
+        errorMessage = '서버 오류가 발생했습니다.';
+      }
+      
+      Alert.alert('오류', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -371,13 +356,22 @@ export default function AuctionDetailScreen() {
       setIsBidding(true);
       
       // 실제 입찰 API 호출
-      const token = (global as any).token;
+      let token = (global as any).token;
+      
+      // global.token이 없으면 AsyncStorage에서 가져오기
+      if (!token) {
+        token = await AsyncStorage.getItem('token');
+        console.log('🔑 AsyncStorage에서 토큰 가져옴:', token ? '토큰 있음' : '토큰 없음');
+      } else {
+        console.log('🔑 Global 토큰 사용:', token ? '토큰 있음' : '토큰 없음');
+      }
+      
       if (!token) {
         Alert.alert('오류', '로그인이 필요합니다.');
         return;
       }
 
-      const response = await fetch(`http://192.168.0.36:3000/api/auctions/${auctionId}/bid`, {
+      const response = await fetch(`${workingUrl}/auctions/${auctionId}/bid`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -704,6 +698,21 @@ export default function AuctionDetailScreen() {
           </Card>
         )}
 
+        {/* 승인 대기 중인 경매 정보 */}
+        {auction && auction.status === 'pending' && (
+          <Card style={styles.pendingCard}>
+            <Card.Content>
+              <View style={styles.pendingHeader}>
+                <IconButton icon="clock-outline" size={24} iconColor="#FF9800" />
+                <Text style={styles.pendingTitle}>승인 대기 중</Text>
+              </View>
+              <Text style={styles.pendingMessage}>
+                이 경매는 관리자 승인을 기다리고 있습니다. 승인 후 입찰이 가능합니다.
+              </Text>
+            </Card.Content>
+          </Card>
+        )}
+
         {/* 종료된 경매 정보 */}
         {auction && auction.status === 'ended' && (
           <Card style={styles.endedCard}>
@@ -1022,6 +1031,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#4A90E2',
+  },
+  // 승인 대기 중인 경매 스타일
+  pendingCard: {
+    margin: 16,
+    marginTop: 8,
+    backgroundColor: '#fff3e0',
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF9800',
+  },
+  pendingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  pendingTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FF9800',
+    marginLeft: 8,
+  },
+  pendingMessage: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
   },
   // 종료된 경매 스타일
   endedCard: {

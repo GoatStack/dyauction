@@ -227,15 +227,14 @@ export default function SettingsScreen() {
             />
           </Card.Content>
         </Card>
-
-        {/* 로그아웃 버튼 */}
-        <TouchableOpacity 
-          style={styles.logoutButton}
-          onPress={handleLogout}
-        >
-          <Text style={styles.logoutButtonText}>로그아웃</Text>
-        </TouchableOpacity>
-      </ScrollView>
+      </ScrollView> 
+      {/* 로그아웃 버튼 */}
+      <TouchableOpacity 
+        style={styles.logoutButton}
+        onPress={handleLogout}
+      >
+        <Text style={styles.logoutButtonText}>로그아웃</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }

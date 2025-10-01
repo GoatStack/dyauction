@@ -1,6 +1,7 @@
 import express from 'express';
 import { getDatabase } from '../config/database';
 import { auth, AuthRequest } from '../middleware/auth';
+import { getImageUrl, processImageUrls, formatAuctionImages } from '../utils/imageUtils';
 
 const router = express.Router();
 
@@ -97,42 +98,9 @@ router.get('/auctions', auth, async (req: AuthRequest, res) => {
     
     console.log('📊 조회된 경매 수:', auctions.length);
     
-    // 이미지 데이터 파싱 및 URL 변환
+    // 이미지 데이터 파싱 및 URL 변환 - 유틸리티 함수 사용
     const auctionsWithImages = auctions.map((auction: any) => {
-      let images = [];
-      let imageUrl = null;
-      
-      if (auction.images) {
-        try {
-          images = JSON.parse(auction.images);
-          console.log('📸 파싱된 이미지 배열:', images);
-          
-          // 로컬 파일 경로를 웹 URL로 변환
-          images = images.map((img: string) => {
-            if (img.startsWith('file://')) {
-              // 로컬 파일 경로를 웹 접근 가능한 URL로 변환
-              const filename = img.split('/').pop();
-              return `http://192.168.0.36:3000/uploads/${filename}`;
-            } else if (img.includes('.jpg') || img.includes('.png') || img.includes('.jpeg')) {
-              // 파일명만 있는 경우
-              return `http://192.168.0.36:3000/uploads/${img}`;
-            }
-            return img;
-          });
-          
-          imageUrl = images[0] || null;
-          console.log('🌐 최종 이미지 URL:', imageUrl);
-        } catch (error) {
-          console.error('이미지 파싱 오류:', error);
-          images = [];
-        }
-      }
-      
-      return {
-        ...auction,
-        images,
-        imageUrl
-      };
+      return formatAuctionImages(auction);
     });
     
     res.json(auctionsWithImages);
@@ -180,7 +148,9 @@ router.get('/bids', auth, async (req: AuthRequest, res) => {
             if (img.startsWith('file://')) {
               // 로컬 파일 경로를 웹 접근 가능한 URL로 변환
               const filename = img.split('/').pop();
-              return `http://192.168.0.36:3000/uploads/${filename}`;
+              // 로컬 파일 경로는 더 이상 사용하지 않음 (DB 기반으로 변경)
+              console.warn('file:// 경로는 더 이상 지원되지 않습니다:', img);
+              return img;
             }
             return img;
           });
@@ -282,35 +252,9 @@ router.get('/auctions/bidding', auth, async (req: AuthRequest, res) => {
       ORDER BY b.bid_time DESC
     `).all(req.user?.userId);
     
-    // 이미지 데이터 파싱 및 URL 변환
+    // 이미지 데이터 파싱 및 URL 변환 - 유틸리티 함수 사용
     const bidsWithImages = bids.map((bid: any) => {
-      let images = [];
-      let imageUrl = null;
-      
-      if (bid.images) {
-        try {
-          images = JSON.parse(bid.images);
-          // 로컬 파일 경로를 웹 URL로 변환
-          images = images.map((img: string) => {
-            if (img.startsWith('file://')) {
-              // 로컬 파일 경로를 웹 접근 가능한 URL로 변환
-              const filename = img.split('/').pop();
-              return `http://192.168.0.36:3000/uploads/${filename}`;
-            }
-            return img;
-          });
-          imageUrl = images[0] || null;
-        } catch (error) {
-          console.error('이미지 파싱 오류:', error);
-          images = [];
-        }
-      }
-      
-      return {
-        ...bid,
-        images,
-        imageUrl
-      };
+      return formatAuctionImages(bid);
     });
     
     res.json(bidsWithImages);
@@ -360,7 +304,9 @@ router.get('/auctions/won', auth, async (req: AuthRequest, res) => {
             if (img.startsWith('file://')) {
               // 로컬 파일 경로를 웹 접근 가능한 URL로 변환
               const filename = img.split('/').pop();
-              return `http://192.168.0.36:3000/uploads/${filename}`;
+              // 로컬 파일 경로는 더 이상 사용하지 않음 (DB 기반으로 변경)
+              console.warn('file:// 경로는 더 이상 지원되지 않습니다:', img);
+              return img;
             }
             return img;
           });

@@ -1556,6 +1556,10 @@
                     const imagesDiv = document.getElementById('detailAuctionImages');
                     let images = [];
                     
+                    console.log('🔍 경매 상세 - 원본 데이터:', auction);
+                    console.log('🔍 경매 상세 - images 필드:', auction.images);
+                    console.log('🔍 경매 상세 - imageUrl 필드:', auction.imageUrl);
+                    
                     // images 필드가 JSON 문자열인 경우 파싱
                     if (auction.images) {
                         try {
@@ -1573,15 +1577,42 @@
                     }
                     
                     if (images && images.length > 0) {
-                        imagesDiv.innerHTML = images.map(image => {
-                            // file:// 경로인 경우 처리
-                            let imageSrc = image;
-                            if (image.startsWith('file://')) {
-                                // 로컬 파일 경로는 웹에서 접근할 수 없으므로 기본 이미지 표시
-                                return `<div class="no-image">로컬 이미지<br>웹에서 접근 불가</div>`;
-                            }
-                            return `<img src="${image}" alt="경매 이미지" onerror="this.style.display='none'">`;
-                        }).join('');
+                        // 이미지를 Base64로 변환하여 표시
+                        imagesDiv.innerHTML = '<div style="color: blue; padding: 10px;">이미지 로딩 중...</div>';
+                        
+                        // 첫 번째 이미지만 로드
+                        let firstImage = images[0];
+                        
+                        // URL에 /auctions가 누락된 경우 추가
+                        if (firstImage.includes('/api/images/') && !firstImage.includes('/api/auctions/images/')) {
+                            firstImage = firstImage.replace('/api/images/', '/api/auctions/images/');
+                            console.log('🔧 URL 수정:', firstImage);
+                        }
+                        
+                        console.log('🔍 이미지 로드 시작:', firstImage);
+                        
+                        fetch(firstImage)
+                            .then(response => {
+                                console.log('📡 이미지 응답 상태:', response.status);
+                                if (!response.ok) {
+                                    throw new Error(`HTTP ${response.status}`);
+                                }
+                                return response.blob();
+                            })
+                            .then(blob => {
+                                console.log('✅ 이미지 Blob 생성 성공');
+                                const reader = new FileReader();
+                                reader.onload = function(e) {
+                                    const base64 = e.target.result;
+                                    console.log('✅ Base64 변환 성공');
+                                    imagesDiv.innerHTML = `<img src="${base64}" alt="경매 이미지" style="max-width: 200px; max-height: 200px; margin: 5px; border-radius: 8px;">`;
+                                };
+                                reader.readAsDataURL(blob);
+                            })
+                            .catch(error => {
+                                console.error('❌ 이미지 로드 실패:', error);
+                                imagesDiv.innerHTML = `<div style="color: red; padding: 10px;">이미지 로딩 실패: ${error.message}</div>`;
+                            });
                     } else {
                         imagesDiv.innerHTML = '<div class="no-image">경매 이미지가 없습니다</div>';
                     }
@@ -1628,6 +1659,8 @@
                 });
                 
                 const auctions = await response.json();
+                console.log('🔍 관리자 페이지 - 경매 데이터:', auctions);
+                console.log('🔍 첫 번째 경매 이미지 정보:', auctions[0]?.images, auctions[0]?.imageUrl);
                 const tbody = document.getElementById('auctionsTableBody');
                 
                 if (auctions.length === 0) {

@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "dyauction",
+  "private_key_id": "12141cec7e8665c48fa4ce4501081d25b3775db6",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCWdsrUM6vw4nXE\nSCkEBCh7/Q6IqCaRVXrXVLdnK6sfCsXcjfU+UepWkRxEKBl0+LmIHx3rGW8qE1t8\nuTgnNEbx7iYXQlYEfCGHD3VxIJNUlvjLziYATkuHzT1cgMl2RNwzQEJuX2QM+tWw\njXbwWori2jb7YcwtR2pnMVA7tGjaMybu7s9XJgOF5Vh0aFFN05+tyBenmMYUOZK8\n/NZsTVoDvS1+X41/T+ROkuyDLEBPeP1IMFdCym/CosrHwLHFtWSkL77kpyUFTzof\n0qleTqtBbFHm4MIg4gEy3pwQGW6yvJq4AEdNHFX1ZzzJPQbGgBGxs1s3WvGHWWes\nAv4kZEiFAgMBAAECggEAEO8txNRL9cCHIKA+fYU6SToh+J90N8c3HCUcvy/bApNj\n0X7oqyrtBPEwDTu2IcQcnYVjCKLEMCgdk9wExeTMV05GWzfMFpUh8OF8hk70RgD3\n33hELqShO5eN4GteQUFexyXkVCfISu2wPz6stEB8gSuuJHzNTgtLnnGeZhnX8zbC\nYuhHSBvs9AH2XjGbpzYYe6D87i3DvnFYGDWyJjYsXhDA6ip69Z10cg3SrG3CP3+w\nAClVALzhjwPyJqdGRn1RYYT/M63HVzXmMv6eoVyr/a0/k5AXzC8djGrvqsca0BM3\n+W3WGgVIQwsu8xWw+28AqtF6/B+aHnFcp8nbshs9wQKBgQDM5y6lA0LmezrU5vEw\n5wQDI9cdSHctP36x3TpwTtDcJ8ejYsCGEvHSRHibkoIY4VnPDU4qjl1c6Zpk3O5j\nwCMLZsMz7NnUsd60L5HDW/hig97K+iPXwOuHFkWD4/kvtHpDf31YiZPv4JE60Kvj\npfetyaLJ/uSItAg5pmnWfZko6wKBgQC7/EYypNoNfsOyv7jeA1lXEI3Vv/Cpnz5C\n1Uj7FN4jMiIAAsq4kLnnTBtDQbm/rniahYbsfn7DlIm+9H1ywAhbgGVMeL1h7D8w\nqqwEjVQnniJyWZdQrpPZObw3ElixsbGt91aGF4umw6P10GxYZfKXNbv1QqVlAZCn\n35xdqDf4TwKBgF/5lR6TlX1xkQ/yEF0wh++UlQjRTYkzKXvUPLAoKqpEM71y3uyt\n6PjtO3TbPfa7bx6Ng+RpBJAllzzRQxQUBhYsDxi+QxXeLotFkMfpx0EVtYBrg+hm\nI6wFoY/yc2CF75K4H5Ud894y2LOs1CZwMcAEJyzoKFFjykp+iSp/cAL7AoGAb4pC\nhK44C6XZrGgB4wmNqxFRdzDKNXsdUD6JbSF2pN+MOQFvE5AcHleUHZYUBt4ZBWaR\nJiXwRVAPY1RiUwIKc3B9qqBBjqbE37WFF7Zb5p33xm3OULslUtDlErA6HEVZLeYC\nWtIBtNOEp8ghYVosVPg3LFF9Ha+OC22stA2qGBUCgYBMysCnoD8Cf7r7psVUaV+k\nAcVtLlwzM7wogmKhtzhJp3JUIOtI4W0bU7KEZNDcB2AaiDGiOJVxh8/J9cwODZe1\nlkevKzoiVe6TW0C1/i5QNaEP8RGrXnv5Mv6J+2q5MHxm6EndyJgjL+eK9pDJEUuC\nGWmiddeVFEYzVAYQXpNdhQ==\n-----END PRIVATE KEY-----\n",
+  "client_email": "dyauction@dyauction.iam.gserviceaccount.com",
+  "client_id": "118033478390773134396",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/dyauction%40dyauction.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

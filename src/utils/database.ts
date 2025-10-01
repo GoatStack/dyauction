@@ -1,8 +1,8 @@
 // 백엔드 API 기본 URL
 // React Native 시뮬레이터에서는 localhost 대신 127.0.0.1 (iOS) 사용
 const API_BASE_URL = __DEV__ 
-  ? 'http://192.168.0.36:3000/api'  // iOS 시뮬레이터
-  : 'http://192.168.0.36:3000/api';  // 프로덕션
+  ? 'http://40.82.159.69:65000/api'  // iOS 시뮬레이터
+  : 'http://40.82.159.69:65000/api';  // 프로덕션
 
 // API 호출 헬퍼 함수
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
@@ -58,7 +58,7 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
 export const initDatabase = async (): Promise<void> => {
   try {
     // 백엔드 서버 상태 확인 (루트 경로 사용)
-    const response = await fetch('http://192.168.0.36:3000/');
+    const response = await fetch('http://40.82.159.69:65000/');
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }

@@ -15,45 +15,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { User } from '../types/auth';
 import { AuctionItem } from '../types/auction';
-
-// 이미지 URL 변환 함수
-const convertImageUrl = (imageUrl: any): string => {
-  // undefined, null 체크
-  if (!imageUrl) {
-    return 'https://via.placeholder.com/400x300/cccccc/666666?text=이미지+없음';
-  }
-  
-  // 배열인 경우 첫 번째 요소 사용
-  if (Array.isArray(imageUrl)) {
-    if (imageUrl.length > 0 && typeof imageUrl[0] === 'string') {
-      return convertImageUrl(imageUrl[0]);
-    }
-    return 'https://via.placeholder.com/400x300/cccccc/666666?text=이미지+없음';
-  }
-  
-  // 문자열이 아닌 경우
-  if (typeof imageUrl !== 'string') {
-    return 'https://via.placeholder.com/400x300/cccccc/666666?text=이미지+없음';
-  }
-  
-  // 이미 웹 URL인 경우 그대로 사용
-  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-    return imageUrl;
-  }
-  
-  // 로컬 파일 경로인 경우 웹 URL로 변환
-  if (imageUrl.startsWith('file://')) {
-    const filename = imageUrl.split('/').pop();
-    return `http://192.168.0.36:3000/uploads/${filename}`;
-  }
-  
-  // 파일명만 있는 경우
-  if (imageUrl.includes('.jpg') || imageUrl.includes('.png') || imageUrl.includes('.jpeg')) {
-    return `http://192.168.0.36:3000/uploads/${imageUrl}`;
-  }
-  
-  return imageUrl;
-};
+import { useAuth } from '../contexts/AuthContext';
+import { normalizeImageUrl } from '../utils/imageUtils';
 
 interface ProfileStats {
   sales: number;
@@ -64,6 +27,7 @@ interface ProfileStats {
 export default function ProfileScreen() {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
+  const { token, user: authUser } = useAuth();
   
 
   
@@ -124,9 +88,9 @@ export default function ProfileScreen() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch('http://192.168.0.36:3000/api/users/profile', {
+      const response = await fetch('http://40.82.159.69:65000/api/users/profile', {
         headers: { 
-          'Authorization': `Bearer ${(global as any).token || 'test-token'}`,
+          'Authorization': `Bearer ${token || 'test-token'}`,
           'Content-Type': 'application/json'
         },
         signal: controller.signal
@@ -171,9 +135,9 @@ export default function ProfileScreen() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch('http://192.168.0.36:3000/api/users/stats', {
+      const response = await fetch('http://40.82.159.69:65000/api/users/stats', {
         headers: { 
-          'Authorization': `Bearer ${(global as any).token || 'test-token'}`,
+          'Authorization': `Bearer ${token || 'test-token'}`,
           'Content-Type': 'application/json'
         },
         signal: controller.signal
@@ -224,9 +188,9 @@ export default function ProfileScreen() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch(`http://192.168.0.36:3000/api/users/auctions/${tab}`, {
+      const response = await fetch(`http://40.82.159.69:65000/api/users/auctions/${tab}`, {
         headers: { 
-          'Authorization': `Bearer ${(global as any).token || 'test-token'}`,
+          'Authorization': `Bearer ${token || 'test-token'}`,
           'Content-Type': 'application/json'
         },
         signal: controller.signal
@@ -539,7 +503,7 @@ export default function ProfileScreen() {
                   <View style={styles.auctionActivityImageContainer}>
                     <Image 
                       source={{ 
-                        uri: convertImageUrl(item.imageUrl)
+                        uri: normalizeImageUrl(item.imageUrl)
                       }} 
                       style={styles.auctionActivityImage} 
                     />

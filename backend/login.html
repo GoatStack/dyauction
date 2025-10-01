@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DyAuction 관리자 로그인</title>
+    <title>DyAuction - 경매 플랫폼</title>
     <style>
         * {
             margin: 0;
@@ -153,6 +153,39 @@
             100% { transform: rotate(360deg); }
         }
         
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .nav-btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .nav-btn:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+        
+        .nav-btn.secondary {
+            background: #6c757d;
+        }
+        
+        .nav-btn.secondary:hover {
+            background: #545b62;
+        }
+        
         .footer {
             margin-top: 40px;
             padding-top: 24px;
@@ -165,8 +198,13 @@
 <body>
     <div class="login-container">
         <div class="logo">
-            <h1>DyAuction</h1>
-            <p>Admin Portal</p>
+            <h1>🏆 DyAuction</h1>
+            <p>실시간 온라인 경매 플랫폼</p>
+        </div>
+        
+        <div class="nav-buttons">
+            <a href="/admin" class="nav-btn">관리자 페이지</a>
+            <a href="/api/health" class="nav-btn secondary">API 상태</a>
         </div>
         
         <form class="login-form" onsubmit="login(event)">
@@ -193,7 +231,7 @@
         </div>
         
         <div class="footer">
-            <p>관리자 계정으로만 접근 가능합니다</p>
+            <p>DyAuction - 실시간 온라인 경매 플랫폼</p>
         </div>
     </div>
     

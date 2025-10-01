@@ -71,6 +71,17 @@ const createTables = () => {
       FOREIGN KEY (bidder_id) REFERENCES users (id)
     )
   `);
+  
+  // 이미지 테이블 (DB에 직접 저장)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS images (
+      id TEXT PRIMARY KEY,
+      data BLOB NOT NULL,
+      mime_type TEXT NOT NULL,
+      size INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 
   // 기본 관리자 계정 생성 (없는 경우에만)
   const adminExists = db.prepare('SELECT * FROM users WHERE user_type = ? OR username = ? OR email = ?').get('admin', 'admin', 'admin@dyauction.com');

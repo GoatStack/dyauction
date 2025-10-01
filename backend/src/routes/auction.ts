@@ -10,6 +10,7 @@ import {
   sendApprovalNotificationEmail, 
   sendHotAuctionNotificationEmail 
 } from '../utils/emailService';
+import { getImageUrl, processImageUrls, formatAuctionImages } from '../utils/imageUtils';
 
 const router = express.Router();
 
@@ -31,12 +32,23 @@ const storage = multer.diskStorage({
 const upload = multer({ 
   storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB 제한
+    fileSize: 50 * 1024 * 1024, // 50MB 제한
+    fieldSize: 50 * 1024 * 1024, // 50MB 필드 크기 제한
+    fieldNameSize: 100, // 필드명 크기 제한
   },
   fileFilter: (req, file, cb) => {
+    console.log('🔍 파일 필터 체크:', {
+      fieldname: file.fieldname,
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size
+    });
+    
     if (file.mimetype.startsWith('image/')) {
+      console.log('✅ 이미지 파일 승인');
       cb(null, true);
     } else {
+      console.log('❌ 이미지 파일이 아님:', file.mimetype);
       cb(new Error('이미지 파일만 업로드 가능합니다.'));
     }
   }
@@ -129,29 +141,106 @@ const autoEndExpiredAuctions = async () => {
 // 1분마다 자동 종료 체크
 setInterval(autoEndExpiredAuctions, 60000); // 60초 = 1분
 
-// 경매 이미지 업로드 API
+// 경매 이미지 업로드 API (파일 + DB 저장 방식)
 router.post('/upload-image', auth, upload.single('auctionImage'), async (req: AuthRequest, res) => {
   try {
+    console.log('📤 이미지 업로드 요청 받음:', {
+      body: req.body,
+      file: req.file ? {
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      } : null
+    });
+    
     if (!req.file) {
+      console.log('❌ 이미지 파일이 없음');
       return res.status(400).json({ message: '이미지 파일이 필요합니다.' });
     }
-
-    const imageUrl = `http://192.168.0.36:3000/uploads/${req.file.filename}`;
     
-    console.log('📤 경매 이미지 업로드 성공:', {
+    console.log('📋 업로드된 파일 정보:', {
       filename: req.file.filename,
-      imageUrl: imageUrl,
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      path: req.file.path
+    });
+    
+    // 파일을 읽어서 DB에 저장
+    const fs = require('fs');
+    const fileBuffer = fs.readFileSync(req.file.path);
+    
+    // 이미지 ID 생성
+    const imageId = `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // DB에 이미지 데이터 저장
+    const db = getDatabase();
+    const stmt = db.prepare(`
+      INSERT INTO images (id, data, mime_type, size, created_at) 
+      VALUES (?, ?, ?, ?, ?)
+    `);
+    
+    const now = new Date().toISOString();
+    stmt.run(imageId, fileBuffer, req.file.mimetype, req.file.size, now);
+    
+    console.log('📤 이미지 DB 저장 성공:', {
+      imageId: imageId,
+      size: req.file.size,
+      mimeType: req.file.mimetype,
       userId: req.user?.userId
     });
-
+    
+    const finalImageUrl = `/images/${imageId}`;
+    console.log('📤 반환할 이미지 URL:', finalImageUrl);
+    
     res.json({ 
       message: '이미지 업로드 성공',
-      imageUrl: imageUrl,
-      filename: req.file.filename
+      imageId: imageId,
+      imageUrl: finalImageUrl // DB에서 조회하는 URL (/api 제거)
     });
   } catch (error) {
     console.error('이미지 업로드 오류:', error);
     res.status(500).json({ message: '이미지 업로드에 실패했습니다.' });
+  }
+});
+
+// OPTIONS 요청 처리 (CORS preflight)
+router.options('/images/:imageId', (req, res) => {
+  res.set({
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+  });
+  res.status(200).end();
+});
+
+// 이미지 조회 API (DB에서 직접 조회)
+router.get('/images/:imageId', async (req, res) => {
+  try {
+    const { imageId } = req.params;
+    
+    const db = getDatabase();
+    const image = db.prepare(`
+      SELECT data, mime_type FROM images WHERE id = ?
+    `).get(imageId) as any;
+    
+    if (!image) {
+      return res.status(404).json({ message: '이미지를 찾을 수 없습니다.' });
+    }
+    
+    res.set({
+      'Content-Type': image.mime_type,
+      'Cache-Control': 'public, max-age=31536000', // 1년 캐시
+      'Content-Length': image.data.length,
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    });
+    
+    res.send(image.data);
+  } catch (error) {
+    console.error('이미지 조회 오류:', error);
+    res.status(500).json({ message: '이미지 조회에 실패했습니다.' });
   }
 });
 
@@ -182,21 +271,8 @@ router.get('/', async (req, res) => {
       ORDER BY a.created_at DESC
     `).all();
     
-    // 응답 데이터 형식 맞추기 및 이미지 URL 변환
+    // 응답 데이터 형식 맞추기 (이미지 URL은 그대로 사용)
     const formattedAuctions = auctions.map((auction: any) => {
-      let images = [];
-      let imageUrl = null;
-      
-      if (auction.images) {
-        try {
-          images = JSON.parse(auction.images);
-
-          imageUrl = images[0] || null;
-        } catch (error) {
-          console.error('이미지 파싱 오류:', error);
-          images = [];
-        }
-      }
       
       return {
         id: auction.id,
@@ -207,8 +283,8 @@ router.get('/', async (req, res) => {
         endTime: auction.endTime,
         status: auction.status,
         createdAt: auction.createdAt,
-        images: images,
-        imageUrl: imageUrl,
+        images: auction.images ? JSON.parse(auction.images) : [],
+        imageUrl: auction.images ? JSON.parse(auction.images)[0] : null,
         seller: {
           username: auction.sellerName
         },
@@ -325,37 +401,9 @@ router.get('/hot', async (req, res) => {
       return res.json(null);
     }
     
-    // 이미지 URL 변환
-    let images = [];
-    let imageUrl = null;
+    // 이미지 URL은 그대로 사용 (DB에서 조회한 URL 사용)
     
-    if (hotAuction.images) {
-      try {
-        images = JSON.parse(hotAuction.images);
-        images = images.map((img: string) => {
-          // 이미 웹 URL인 경우 그대로 사용
-          if (img.startsWith('http://') || img.startsWith('https://')) {
-            return img;
-          }
-          // 로컬 파일 경로인 경우 웹 URL로 변환
-          if (img.startsWith('file://')) {
-            const filename = img.split('/').pop();
-            return `http://192.168.0.36:3000/uploads/${filename}`;
-          } 
-          // 파일명만 있는 경우
-          if (img.includes('.jpg') || img.includes('.png') || img.includes('.jpeg')) {
-            return `http://192.168.0.36:3000/uploads/${img}`;
-          }
-          return img;
-        });
-        imageUrl = images[0] || null;
-      } catch (error) {
-        console.error('이미지 파싱 오류:', error);
-        images = [];
-      }
-    }
-    
-    const formattedAuction = {
+    const result = {
       id: hotAuction.id,
       title: hotAuction.title,
       description: hotAuction.description,
@@ -364,8 +412,8 @@ router.get('/hot', async (req, res) => {
       endTime: hotAuction.endTime,
       status: hotAuction.status,
       createdAt: hotAuction.createdAt,
-      images: images,
-      imageUrl: imageUrl,
+      images: hotAuction.images ? JSON.parse(hotAuction.images) : [],
+      imageUrl: hotAuction.images ? JSON.parse(hotAuction.images)[0] : null,
       seller: {
         username: hotAuction.sellerName
       },
@@ -373,7 +421,7 @@ router.get('/hot', async (req, res) => {
       participantCount: hotAuction.participantCount || 0
     };
     
-    res.json(formattedAuction);
+    res.json(result);
   } catch (error) {
     console.error('Get hot auction error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
@@ -453,26 +501,8 @@ router.post('/', auth, async (req: AuthRequest, res) => {
     const startTime = now.toISOString();
     const endTime = new Date(now.getTime() + durationMinutes * 60 * 1000).toISOString();
     
-    // 이미지 URL 처리 (이미 웹 URL이므로 그대로 사용)
-    let processedImages = [];
-    if (imageUris && imageUris.length > 0) {
-      processedImages = imageUris.map((imageUri: string) => {
-        // 이미 웹 URL인 경우 그대로 사용
-        if (imageUri.startsWith('http://') || imageUri.startsWith('https://')) {
-          return imageUri;
-        }
-        // 로컬 파일 경로인 경우에만 변환
-        if (imageUri.startsWith('file://')) {
-          const filename = imageUri.split('/').pop();
-          return `http://192.168.0.36:3000/uploads/${filename}`;
-        }
-        // 파일명만 있는 경우
-        if (imageUri.includes('.jpg') || imageUri.includes('.png') || imageUri.includes('.jpeg')) {
-          return `http://192.168.0.36:3000/uploads/${imageUri}`;
-        }
-        return imageUri;
-      });
-    }
+    // 이미지 URL을 그대로 저장 (이미 완전한 URL 형태)
+    const processedImages = imageUris;
     
     const stmt = db.prepare(`
       INSERT INTO auctions (
@@ -722,6 +752,29 @@ router.patch('/:id/reject', auth, async (req: AuthRequest, res) => {
     });
   } catch (error) {
     console.error('Reject auction error:', error);
+    res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 관리자용 경매 거부 API (POST 메서드 호환)
+router.post('/:id/reject', auth, async (req: AuthRequest, res) => {
+  try {
+    const db = getDatabase();
+    
+    // 관리자 권한 확인
+    const user = db.prepare('SELECT user_type FROM users WHERE id = ?').get(req.user?.userId) as any;
+    if (!user || user.user_type !== 'admin') {
+      return res.status(403).json({ message: '관리자 권한이 필요합니다.' });
+    }
+    
+    const stmt = db.prepare('UPDATE auctions SET status = ? WHERE id = ?');
+    stmt.run('rejected', req.params.id);
+    
+    res.json({
+      message: '경매가 거부되었습니다.'
+    });
+  } catch (error) {
+    console.error('Reject auction (POST) error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
@@ -1075,6 +1128,7 @@ router.get('/admin/all', auth, async (req: AuthRequest, res) => {
         a.status,
         a.created_at as createdAt,
         a.category,
+        a.images,
         u.username as sellerName
       FROM auctions a
       LEFT JOIN users u ON a.seller_id = u.id
@@ -1092,6 +1146,8 @@ router.get('/admin/all', auth, async (req: AuthRequest, res) => {
       status: auction.status,
       createdAt: auction.createdAt,
       category: auction.category,
+      images: auction.images ? JSON.parse(auction.images) : [],
+      imageUrl: auction.images ? JSON.parse(auction.images)[0] : null,
       seller: {
         username: auction.sellerName
       }

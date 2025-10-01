@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import AuthNavigator from './src/navigation/AuthNavigator';
 import { initDatabase } from './src/utils/database';
 import PushNotificationService from './src/services/pushNotificationService';
+import { AuthProvider } from './src/contexts/AuthContext';
 
 export default function App() {
   useEffect(() => {
@@ -27,10 +28,12 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <PaperProvider>
-        <NavigationContainer>
-          <StatusBar style="auto" />
-          <AuthNavigator />
-        </NavigationContainer>
+        <AuthProvider>
+          <NavigationContainer>
+            <StatusBar style="auto" />
+            <AuthNavigator />
+          </NavigationContainer>
+        </AuthProvider>
       </PaperProvider>
     </SafeAreaProvider>
   );

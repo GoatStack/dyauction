@@ -27,46 +27,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auctionAPI } from '../utils/database';
 import { notificationManager, Notification } from '../utils/notificationManager';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { normalizeImageUrl, formatAuctionImages } from '../utils/imageUtils';
 
 const { width, height } = Dimensions.get('window');
 
-// 이미지 URL 변환 함수
+// 이미지 URL 변환 함수 - 유틸리티 함수 사용
 const convertImageUrl = (imageUrl: any): string => {
-  // undefined, null 체크
-  if (!imageUrl) {
-    return 'https://via.placeholder.com/400x300/cccccc/666666?text=이미지+없음';
-  }
-  
-  // 배열인 경우 첫 번째 요소 사용
-  if (Array.isArray(imageUrl)) {
-    if (imageUrl.length > 0 && typeof imageUrl[0] === 'string') {
-      return convertImageUrl(imageUrl[0]);
-    }
-    return 'https://via.placeholder.com/400x300/cccccc/666666?text=이미지+없음';
-  }
-  
-  // 문자열이 아닌 경우
-  if (typeof imageUrl !== 'string') {
-    return 'https://via.placeholder.com/400x300/cccccc/666666?text=이미지+없음';
-  }
-  
-  // 이미 웹 URL인 경우 그대로 사용
-  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-    return imageUrl;
-  }
-  
-  // 로컬 파일 경로인 경우 웹 URL로 변환
-  if (imageUrl.startsWith('file://')) {
-    const filename = imageUrl.split('/').pop();
-    return `http://192.168.0.36:3000/uploads/${filename}`;
-  }
-  
-  // 파일명만 있는 경우
-  if (imageUrl.includes('.jpg') || imageUrl.includes('.png') || imageUrl.includes('.jpeg')) {
-    return `http://192.168.0.36:3000/uploads/${imageUrl}`;
-  }
-  
-  return imageUrl;
+  return normalizeImageUrl(imageUrl);
 };
 
 interface Auction {
@@ -272,17 +239,25 @@ export default function MainScreen({ navigation }: MainScreenProps) {
         
         if (!hasAddedTestNotifications && notifications.length === 0) {
           notificationManager.addNotification(
-            'DY Auction에 오신 것을 환영합니다!',
-            '경매 등록, 입찰, 알림 등 다양한 기능을 이용해보세요.',
-            'info'
+            'DY Auction에 오신 것을 환영합니다!',  // p0
+            '경매 등록, 입찰, 알림 등 다양한 기능을 이용해보세요.',  // p1
+            'info',  // p2
+            {        // notification 객체
+              title: 'DY Auction에 오신 것을 환영합니다!',
+              message: '경매 등록, 입찰, 알림 등 다양한 기능을 이용해보세요.',
+            }
           );
           
           // 추가 테스트 알림
           setTimeout(() => {
             notificationManager.addNotification(
-              '새로운 경매가 등록되었습니다!',
-              '관심 있는 상품이 있다면 지금 확인해보세요.',
-              'success'
+              '새로운 경매가 등록되었습니다!',  // p0
+              '관심 있는 상품이 있다면 지금 확인해보세요.',  // p1
+              'success',  // p2
+              {           // notification 객체
+                title: '새로운 경매가 등록되었습니다!',
+                message: '관심 있는 상품이 있다면 지금 확인해보세요.',
+              }
             );
           }, 1000);
           
@@ -418,10 +393,14 @@ export default function MainScreen({ navigation }: MainScreenProps) {
 
   // 경매 상세 페이지로 이동
   const handleAuctionPress = (auction: Auction) => {
-    if (auction.status === 'active') {
-      // 진행중인 경매인 경우에만 상세 페이지로 이동
-      navigation.navigate('AuctionDetail', { auctionId: auction.id });
-    }
+    console.log('🔍 경매 클릭:', {
+      id: auction.id,
+      title: auction.title,
+      status: auction.status
+    });
+    
+    // 모든 상태의 경매에 대해 상세 페이지로 이동 가능
+    navigation.navigate('AuctionDetail', { auctionId: auction.id });
   };
 
   // 일반 경매 아이템 렌더링

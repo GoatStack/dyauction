@@ -18,6 +18,7 @@ import {
 
 import { LoginData } from '../types/auth';
 import { authAPI } from '../utils/database';
+import { useAuth } from '../contexts/AuthContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -26,6 +27,7 @@ interface LoginScreenProps {
 }
 
 export default function LoginScreen({ navigation }: LoginScreenProps) {
+  const { login } = useAuth();
   const [formData, setFormData] = useState<LoginData>({
     email: '',
     password: '',
@@ -82,7 +84,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       // 백엔드 서버 연결 테스트
       console.log('🔗 백엔드 서버 연결 테스트 중...');
       try {
-        const testResponse = await fetch('http://192.168.0.36:3000/');
+        const testResponse = await fetch('http://40.82.159.69:65000/');
         console.log('✅ 백엔드 서버 연결 성공:', testResponse.status);
       } catch (testError) {
         console.error('❌ 백엔드 서버 연결 실패:', testError);
@@ -95,7 +97,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       // 직접 fetch로 테스트
       try {
         console.log('🧪 직접 fetch 테스트 시작...');
-        const testResponse = await fetch('http://192.168.0.36:3000/api/auth/login', {
+        const testResponse = await fetch('http://40.82.159.69:65000/api/auth/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -134,28 +136,15 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             [{ text: '확인' }]
           );
         } else if (user.approval_status === 'approved') {
-          // 로그인 성공 - 토큰 저장
+          // 로그인 성공 - AuthContext를 통해 토큰과 사용자 정보 저장
           if (response.token) {
-            (global as any).token = response.token;
+            await login(user, response.token);
             console.log('🔑 토큰이 저장되었습니다:', response.token.substring(0, 20) + '...');
-          }
-          
-          const welcomeMessage = user.user_type === 'admin'
-            ? `${user.username} 관리자님, 덕영 옥션 관리자 페이지에 오신 것을 환영합니다!`
-            : `${user.username}님, 덕영 옥션에 오신 것을 환영합니다!`;
             
-          Alert.alert(
-            '로그인 성공',
-            welcomeMessage,
-            [
-              {
-                text: '확인',
-                onPress: () => {
-                  navigation.navigate('Main');
-                },
-              },
-            ]
-          );
+            // AuthContext가 자동으로 Main 화면으로 리다이렉트되므로 Alert 제거
+            console.log('✅ 로그인 완료 - 메인 화면으로 이동합니다');
+            navigation.navigate('Main');
+          }
         } else if (user.approval_status === 'rejected') {
           Alert.alert(
             '승인 거부',
@@ -252,7 +241,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
             {/* Footer */}
             <View style={styles.footer}>
-              <Text style={styles.footerText}>
+              <Text style={styles.footerText} children={undefined}>
               </Text>
             </View>
           </View>

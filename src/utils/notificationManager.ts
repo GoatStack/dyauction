@@ -55,12 +55,13 @@ class NotificationManager {
     };
   }
 
-  addNotification(notification: Omit<Notification, 'id' | 'timestamp' | 'isRead'>) {
+  addNotification(p0: string, p1: string, p2: string, notification: Omit<Notification, 'id' | 'timestamp' | 'isRead' | 'category'>) {
     const newNotification: Notification = {
       ...notification,
       id: Date.now().toString(),
       timestamp: new Date(),
-      isRead: false
+      isRead: false,
+      category: 'personal'
     };
 
     // 중복 체크 (같은 제목과 메시지가 있는지 확인)
@@ -84,13 +85,17 @@ class NotificationManager {
     auctionId?: number, 
     category: 'personal' | 'general' | 'auction' | 'bid' | 'approval' | 'win' = 'personal'
   ) {
-    this.addNotification({
-      title,
-      message,
-      userId,
-      auctionId,
-      category
-    });
+    this.addNotification(
+      title,                 // p0: 알림 제목
+      message,               // p1: 알림 메시지
+      userId.toString(),     // p2: 사용자 ID (문자열로 변환하여 전달)
+      {                      // notification 객체
+        title,
+        message,
+        userId,
+        auctionId,
+      }
+    );
   }
 
   addUserNotification(userId: number, title: string, message: string) {
