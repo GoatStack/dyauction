@@ -9,12 +9,6 @@ const router = express.Router();
 // 회원가입 (이미지 업로드 포함)
 router.post('/signup', singleImage, async (req, res) => {
   try {
-    console.log('📥 회원가입 요청 데이터:', {
-      body: req.body,
-      file: req.file,
-      headers: req.headers
-    });
-    
     const { username, email, password, studentId } = req.body;
     const db = getDatabase();
     
@@ -56,7 +50,7 @@ router.post('/signup', singleImage, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Signup error:', error);
+    // console.error('Signup error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
@@ -101,7 +95,49 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Login error:', error);
+    // console.error('Login error:', error);
+    res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 토큰 갱신
+router.post('/refresh', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: '인증 토큰이 필요합니다.' });
+    }
+
+    const token = authHeader.substring(7);
+    
+    try {
+      // 기존 토큰 검증
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
+      
+      // 사용자 정보 확인
+      const db = getDatabase();
+      const user = db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.userId) as any;
+      
+      if (!user) {
+        return res.status(401).json({ message: '사용자를 찾을 수 없습니다.' });
+      }
+
+      // 새 토큰 생성
+      const newToken = jwt.sign(
+        { userId: user.id },
+        process.env.JWT_SECRET || 'your-secret-key',
+        { expiresIn: '24h' }
+      );
+
+      res.json({
+        message: '토큰이 갱신되었습니다.',
+        token: newToken
+      });
+    } catch (jwtError) {
+      return res.status(401).json({ message: '유효하지 않은 토큰입니다.' });
+    }
+  } catch (error) {
+    // // console.error('Token refresh error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });

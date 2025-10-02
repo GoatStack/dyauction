@@ -51,7 +51,7 @@ export default function ProfileScreen() {
         await loadUserProfile();
         await loadUserStats();
       } catch (error) {
-        console.error('데이터 로드 중 오류:', error.message);
+        // console.error('데이터 로드 중 오류:', error.message);
       }
     };
     
@@ -109,7 +109,7 @@ export default function ProfileScreen() {
         setUser(null);
       }
     } catch (error) {
-      console.error('프로필 로드 중 오류:', error.message);
+      // console.error('프로필 로드 중 오류:', error.message);
       setUser(null);
     }
   };
@@ -145,7 +145,7 @@ export default function ProfileScreen() {
         });
       }
     } catch (error) {
-      console.error('통계 로드 중 오류:', error.message);
+      // console.error('통계 로드 중 오류:', error.message);
       // 에러 시 빈 상태로 설정
       setStats({
         sales: 0,
@@ -210,7 +210,7 @@ export default function ProfileScreen() {
         setMyAuctions([]);
       }
     } catch (error) {
-      console.error('경매 데이터 로드 실패:', error.message);
+      // console.error('경매 데이터 로드 실패:', error.message);
       setMyAuctions([]);
     }
   };
@@ -258,12 +258,12 @@ export default function ProfileScreen() {
   };
 
   const renderAuctionItem = (item: AuctionItem) => {
-    console.log('🖼️ 경매 카드 이미지 데이터:', {
-      id: item.id,
-      title: item.title,
-      imageUrl: item.imageUrl,
-      convertedUrl: convertImageUrl(item.imageUrl)
-    });
+    // console.log('🖼️ 경매 카드 이미지 데이터:', {
+    //   id: item.id,
+    //   title: item.title,
+    //   imageUrl: item.imageUrl,
+    //   convertedUrl: convertImageUrl(item.imageUrl)
+    // });
     
     return (
       <TouchableOpacity 
@@ -300,12 +300,12 @@ export default function ProfileScreen() {
   };
 
   const renderNewAuctionItem = (item: AuctionItem) => {
-    console.log('🖼️ 새 경매 카드 이미지 데이터:', {
-      id: item.id,
-      title: item.title,
-      imageUrl: item.imageUrl,
-      convertedUrl: convertImageUrl(item.imageUrl)
-    });
+    // console.log('🖼️ 새 경매 카드 이미지 데이터:', {
+    //   id: item.id,
+    //   title: item.title,
+    //   imageUrl: item.imageUrl,
+    //   convertedUrl: convertImageUrl(item.imageUrl)
+    // });
     
     return (
       <TouchableOpacity 

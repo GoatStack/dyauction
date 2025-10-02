@@ -1,3 +1,5 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 // 백엔드 API 기본 URL
 // React Native 시뮬레이터에서는 localhost 대신 127.0.0.1 (iOS) 사용
 const API_BASE_URL = __DEV__ 
@@ -31,6 +33,45 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
       mode: 'cors',
     });
 
+    // 401 에러 시 토큰 갱신 시도
+    if (response.status === 401) {
+      try {
+        const newToken = await refreshToken();
+        if (newToken) {
+          // 새로운 토큰으로 재시도
+          const retryHeaders = options.body instanceof FormData 
+            ? { 
+                ...(newToken && { 'Authorization': `Bearer ${newToken}` }),
+                ...options.headers 
+              }
+            : { 
+                'Content-Type': 'application/json',
+                ...(newToken && { 'Authorization': `Bearer ${newToken}` }),
+                ...options.headers 
+              };
+          
+          const retryResponse = await fetch(url, {
+            ...options,
+            headers: retryHeaders,
+            mode: 'cors',
+          });
+          
+          if (retryResponse.ok) {
+            const contentType = retryResponse.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+              return retryResponse.json();
+            } else {
+              return retryResponse.text();
+            }
+          }
+        }
+      } catch (refreshError) {
+        // 토큰 갱신 실패 시 로그아웃 처리
+        (global as any).token = null;
+        throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.');
+      }
+    }
+
     if (!response.ok) {
       const errorText = await response.text();
       let errorMessage = 'API 호출 실패';
@@ -52,9 +93,39 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
       return response.text();
     }
   } catch (error) {
-    console.error('API 호출 실패:', error.message);
     throw error;
   }
+};
+
+// 토큰 갱신 함수
+const refreshToken = async (): Promise<string | null> => {
+  try {
+    const currentToken = (global as any).token;
+    if (!currentToken) return null;
+
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${currentToken}`,
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const newToken = data.token;
+      
+      // 새 토큰을 글로벌 변수와 AsyncStorage에 저장
+      (global as any).token = newToken;
+      await AsyncStorage.setItem('authToken', newToken);
+      
+      return newToken;
+    }
+  } catch (error) {
+    // 토큰 갱신 실패
+  }
+  
+  return null;
 };
 
 // 데이터베이스 초기화 (백엔드 서버 연결 확인)

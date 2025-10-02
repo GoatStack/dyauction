@@ -41,28 +41,15 @@ const upload = multer({
 // 프로필 이미지 업로드
 router.post('/upload-profile-image', auth, upload.single('profileImage'), async (req: AuthRequest, res) => {
   try {
-    console.log('Upload request received:', req.body);
-    console.log('File:', req.file);
-    console.log('User:', req.user);
 
     if (!req.file) {
-      console.log('No file uploaded');
       return res.status(400).json({ error: '이미지 파일이 없습니다.' });
     }
 
     const userId = req.user?.userId;
     if (!userId) {
-      console.log('No user ID found');
       return res.status(401).json({ error: '인증되지 않은 사용자입니다.' });
     }
-
-    console.log('Processing upload for user:', userId);
-    console.log('File details:', {
-      filename: req.file.filename,
-      originalname: req.file.originalname,
-      mimetype: req.file.mimetype,
-      size: req.file.size
-    });
 
     // 이미지 URL 생성
     const imageUrl = `/uploads/profile-images/${req.file.filename}`;
@@ -73,14 +60,13 @@ router.post('/upload-profile-image', auth, upload.single('profileImage'), async 
       UPDATE users SET profile_image = ? WHERE id = ?
     `).run(imageUrl, userId);
 
-    console.log('Image uploaded successfully:', imageUrl);
 
     res.json({ 
       message: '프로필 이미지가 성공적으로 업로드되었습니다.',
       imageUrl: imageUrl
     });
   } catch (error) {
-    console.error('Failed to upload profile image:', error);
+    // console.error('Failed to upload profile image:', error);
     res.status(500).json({ error: '이미지 업로드에 실패했습니다.' });
   }
 });
@@ -116,7 +102,7 @@ router.get('/profile', auth, async (req: AuthRequest, res) => {
       profileImage: user.profile_image,
     });
   } catch (error) {
-    console.error('Failed to get user profile:', error);
+    // console.error('Failed to get user profile:', error);
     res.status(500).json({ error: '프로필 정보를 가져오는데 실패했습니다.' });
   }
 });
@@ -160,7 +146,7 @@ router.get('/stats', auth, async (req: AuthRequest, res) => {
       wins: winsCount.count || 0,
     });
   } catch (error) {
-    console.error('Failed to get user stats:', error);
+    // console.error('Failed to get user stats:', error);
     res.status(500).json({ error: '통계 정보를 가져오는데 실패했습니다.' });
   }
 });
@@ -225,7 +211,7 @@ router.put('/profile', auth, async (req: AuthRequest, res) => {
 
     res.json({ message: '프로필이 성공적으로 업데이트되었습니다.' });
   } catch (error) {
-    console.error('Failed to update user profile:', error);
+    // console.error('Failed to update user profile:', error);
     res.status(500).json({ error: '프로필 업데이트에 실패했습니다.' });
   }
 });
@@ -284,14 +270,13 @@ router.post('/request-student-id-change', auth, async (req: AuthRequest, res) =>
       VALUES (?, ?, ?)
     `).run(userId, currentUser.student_id, newStudentId);
 
-    console.log(`📝 학번 변경 요청 생성: 사용자 ${userId}, ${currentUser.student_id} → ${newStudentId}`);
 
     res.json({ 
       message: '학번 변경 요청이 제출되었습니다. 관리자 승인을 기다려주세요.',
       requestId: result.lastInsertRowid
     });
   } catch (error) {
-    console.error('Failed to create student ID change request:', error);
+    // console.error('Failed to create student ID change request:', error);
     res.status(500).json({ error: '학번 변경 요청에 실패했습니다.' });
   }
 });
@@ -334,7 +319,7 @@ router.get('/student-id-change-requests', auth, async (req: AuthRequest, res) =>
 
     res.json(requests);
   } catch (error) {
-    console.error('Failed to get student ID change requests:', error);
+    // console.error('Failed to get student ID change requests:', error);
     res.status(500).json({ error: '학번 변경 요청 목록을 가져오는데 실패했습니다.' });
   }
 });
@@ -390,9 +375,7 @@ router.post('/approve-student-id-change/:requestId', auth, async (req: AuthReque
         WHERE id = ?
       `).run(request.new_student_id, request.user_id);
 
-      console.log(`✅ 학번 변경 승인: 사용자 ${request.user_id}, ${request.current_student_id} → ${request.new_student_id}`);
     } else {
-      console.log(`❌ 학번 변경 거부: 사용자 ${request.user_id}, ${request.current_student_id} → ${request.new_student_id}`);
     }
 
     res.json({ 
@@ -400,7 +383,7 @@ router.post('/approve-student-id-change/:requestId', auth, async (req: AuthReque
       status: newStatus
     });
   } catch (error) {
-    console.error('Failed to process student ID change request:', error);
+    // console.error('Failed to process student ID change request:', error);
     res.status(500).json({ error: '학번 변경 요청 처리에 실패했습니다.' });
   }
 });
@@ -449,7 +432,7 @@ router.post('/change-password', auth, async (req: AuthRequest, res) => {
 
     res.json({ message: '비밀번호가 성공적으로 변경되었습니다.' });
   } catch (error) {
-    console.error('Failed to change password:', error);
+    // console.error('Failed to change password:', error);
     res.status(500).json({ error: '비밀번호 변경에 실패했습니다.' });
   }
 });
@@ -562,7 +545,7 @@ router.get('/auctions/:type', auth, async (req: AuthRequest, res) => {
 
     res.json(formattedAuctions);
   } catch (error) {
-    console.error('Failed to get user auctions:', error);
+    // console.error('Failed to get user auctions:', error);
     res.status(500).json({ error: '경매 내역을 가져오는데 실패했습니다.' });
   }
 });
@@ -596,7 +579,7 @@ router.get('/', auth, async (req: AuthRequest, res) => {
     
     res.json(users);
   } catch (error) {
-    console.error('Failed to get users:', error);
+    // console.error('Failed to get users:', error);
     res.status(500).json({ error: '사용자 목록을 가져오는데 실패했습니다.' });
   }
 });
@@ -636,7 +619,7 @@ router.get('/:id', auth, async (req: AuthRequest, res) => {
     
     res.json(user);
   } catch (error) {
-    console.error('Failed to get user details:', error);
+    // console.error('Failed to get user details:', error);
     res.status(500).json({ error: '사용자 상세 정보를 가져오는데 실패했습니다.' });
   }
 });
@@ -670,7 +653,7 @@ router.put('/:id/status', auth, async (req: AuthRequest, res) => {
       approval_status: approval_status
     });
   } catch (error) {
-    console.error('Failed to update user status:', error);
+    // console.error('Failed to update user status:', error);
     res.status(500).json({ error: '사용자 상태 변경에 실패했습니다.' });
   }
 });

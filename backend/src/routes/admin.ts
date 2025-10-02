@@ -44,7 +44,6 @@ router.get('/users', auth, requireAdmin, async (req, res) => {
       ORDER BY created_at DESC
     `).all();
     
-    console.log(`✅ ${users.length}명의 사용자 정보 조회 완료`);
     res.json(users);
   } catch (error) {
     console.error('Get users error:', error);

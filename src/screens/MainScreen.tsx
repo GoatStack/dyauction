@@ -83,7 +83,7 @@ export default function MainScreen({ navigation }: MainScreenProps) {
         setUnreadCount(notificationManager.getUserUnreadCount(user.id));
       }
     } catch (error) {
-      console.error('사용자 알림 로드 실패:', error);
+      // console.error('사용자 알림 로드 실패:', error);
     }
   };
   
@@ -112,7 +112,7 @@ export default function MainScreen({ navigation }: MainScreenProps) {
           try {
             images = JSON.parse(auction.images);
           } catch (e) {
-            console.log('이미지 파싱 실패, 단일 이미지로 처리');
+            // console.log('이미지 파싱 실패, 단일 이미지로 처리');
             images = [auction.images];
           }
         }
@@ -136,7 +136,7 @@ export default function MainScreen({ navigation }: MainScreenProps) {
           try {
             images = JSON.parse(auction.images);
           } catch (e) {
-            console.log('이미지 파싱 실패, 단일 이미지로 처리');
+            // console.log('이미지 파싱 실패, 단일 이미지로 처리');
             images = [auction.images];
           }
         }
@@ -152,22 +152,22 @@ export default function MainScreen({ navigation }: MainScreenProps) {
       // 핫한 경매 처리
       let processedHotAuction = null;
       if (hotResponse) {
-        console.log('🔥 핫한 경매 원본 데이터:', hotResponse);
+        // console.log('🔥 핫한 경매 원본 데이터:', hotResponse);
         
         let images: string[] = [];
         if (hotResponse.images) {
           try {
             images = JSON.parse(hotResponse.images);
-            console.log('🔥 핫한 경매 파싱된 이미지 배열:', images);
+            // console.log('🔥 핫한 경매 파싱된 이미지 배열:', images);
           } catch (e) {
-            console.log('🔥 핫한 경매 이미지 파싱 실패, 단일 이미지로 처리:', hotResponse.images);
+            // console.log('🔥 핫한 경매 이미지 파싱 실패, 단일 이미지로 처리:', hotResponse.images);
             images = [hotResponse.images];
           }
         }
         
         const finalImageUrl = images.length > 0 ? images[0] : hotResponse.imageUrl;
-        console.log('🔥 핫한 경매 최종 이미지 URL:', finalImageUrl);
-        console.log('🔥 핫한 경매 convertImageUrl 결과:', convertImageUrl(finalImageUrl));
+        // console.log('🔥 핫한 경매 최종 이미지 URL:', finalImageUrl);
+        // console.log('🔥 핫한 경매 convertImageUrl 결과:', convertImageUrl(finalImageUrl));
         
         processedHotAuction = {
           ...hotResponse,
@@ -176,19 +176,19 @@ export default function MainScreen({ navigation }: MainScreenProps) {
           participantCount: hotResponse.participantCount || 0
         };
         
-        console.log('🔥 핫한 경매 최종 처리된 데이터:', processedHotAuction);
+        // console.log('🔥 핫한 경매 최종 처리된 데이터:', processedHotAuction);
       }
       
       setAuctions(processedActiveAuctions);
       setEndedAuctions(processedEndedAuctions);
       setHotAuction(processedHotAuction);
     } catch (error: any) {
-      console.error('경매 목록 로드 실패:', error);
-      console.error('에러 상세 정보:', {
-        message: error?.message || '알 수 없는 오류',
-        stack: error?.stack || '스택 정보 없음',
-        name: error?.name || 'Error'
-      });
+      // console.error('경매 목록 로드 실패:', error);
+      // console.error('에러 상세 정보:', {
+      //   message: error?.message || '알 수 없는 오류',
+      //   stack: error?.stack || '스택 정보 없음',
+      //   name: error?.name || 'Error'
+      // });
       
       // 더 구체적인 에러 메시지 표시
       let errorMessage = '경매 목록을 불러올 수 없습니다.';
@@ -212,7 +212,7 @@ export default function MainScreen({ navigation }: MainScreenProps) {
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     // 실제 검색 로직은 나중에 구현
-    console.log('검색어:', query);
+    // console.log('검색어:', query);
   };
 
   // 새로고침
@@ -266,7 +266,7 @@ export default function MainScreen({ navigation }: MainScreenProps) {
           await AsyncStorage.setItem('hasAddedTestNotifications', 'true');
         }
       } catch (error) {
-        console.error('테스트 알림 추가 실패:', error);
+        // console.error('테스트 알림 추가 실패:', error);
       }
     };
     
@@ -320,7 +320,7 @@ export default function MainScreen({ navigation }: MainScreenProps) {
       setSelectedAuction(null);
       loadAuctions();
     } catch (error) {
-      console.error('입찰 실패:', error);
+      // console.error('입찰 실패:', error);
       Alert.alert('오류', '입찰에 실패했습니다.');
     }
   };
@@ -394,11 +394,11 @@ export default function MainScreen({ navigation }: MainScreenProps) {
 
   // 경매 상세 페이지로 이동
   const handleAuctionPress = (auction: Auction) => {
-    console.log('🔍 경매 클릭:', {
-      id: auction.id,
-      title: auction.title,
-      status: auction.status
-    });
+    // console.log('🔍 경매 클릭:', {
+    //   id: auction.id,
+    //   title: auction.title,
+    //   status: auction.status
+    // });
     
     // 모든 상태의 경매에 대해 상세 페이지로 이동 가능
     navigation.navigate('AuctionDetail', { auctionId: auction.id });

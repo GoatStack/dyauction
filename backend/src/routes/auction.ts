@@ -37,18 +37,9 @@ const upload = multer({
     fieldNameSize: 100, // 필드명 크기 제한
   },
   fileFilter: (req, file, cb) => {
-    console.log('🔍 파일 필터 체크:', {
-      fieldname: file.fieldname,
-      originalname: file.originalname,
-      mimetype: file.mimetype,
-      size: file.size
-    });
-    
     if (file.mimetype.startsWith('image/')) {
-      console.log('✅ 이미지 파일 승인');
       cb(null, true);
     } else {
-      console.log('❌ 이미지 파일이 아님:', file.mimetype);
       cb(new Error('이미지 파일만 업로드 가능합니다.'));
     }
   }
@@ -59,37 +50,28 @@ const autoEndExpiredAuctions = async () => {
   try {
     const db = getDatabase();
     const now = new Date().toISOString();
-    
-    // 종료 시간이 지난 활성 경매 조회
-    const expiredAuctions = db.prepare(`
+    const expiredStmt = db.prepare(`
       SELECT a.*, u.email, u.username as seller_name
       FROM auctions a
       LEFT JOIN users u ON a.seller_id = u.id
       WHERE a.status = 'active' AND a.end_time <= ?
-    `).all(now);
-    
-    
+    `);
+    const expiredAuctions = expiredStmt.all(now);
     for (const auction of expiredAuctions) {
       const auctionData = auction as any;
-      
-      // 경매 상태를 종료로 변경
-      db.prepare('UPDATE auctions SET status = ? WHERE id = ?').run('ended', auctionData.id);
-      
-      
-      // 낙찰자와 판매자에게 알림 전송
+      const updateStmt = db.prepare('UPDATE auctions SET status = ? WHERE id = ?');
+      updateStmt.run('ended', auctionData.id);
       if (auctionData.current_price > auctionData.starting_price) {
         try {
-          // 낙찰자 정보 조회
-          const winnerInfo = db.prepare(`
+          const winnerStmt = db.prepare(`
             SELECT u.email, u.username 
             FROM users u 
             JOIN bids b ON u.id = b.bidder_id 
             WHERE b.auction_id = ? AND b.amount = ? 
             ORDER BY b.created_at DESC 
             LIMIT 1
-          `).get(auctionData.id, auctionData.current_price) as any;
-          
-          // 낙찰자에게 낙찰 알림
+          `);
+          const winnerInfo = winnerStmt.get(auctionData.id, auctionData.current_price) as any;
           if (winnerInfo?.email) {
             await sendWinNotificationEmail(
               winnerInfo.email,
@@ -98,10 +80,7 @@ const autoEndExpiredAuctions = async () => {
               auctionData.current_price,
               auctionData.id
             );
-            console.log(`📧 낙찰 알림 발송: ${winnerInfo.email} - ${auctionData.title}`);
           }
-          
-          // 판매자에게 경매 종료 알림
           if (auctionData.email) {
             await sendApprovalNotificationEmail(
               auctionData.email,
@@ -109,13 +88,9 @@ const autoEndExpiredAuctions = async () => {
               `${auctionData.title} 경매가 종료되었습니다. 낙찰가: ${auctionData.current_price.toLocaleString()}원`,
               auctionData.id
             );
-            console.log(`📧 경매 종료 알림 발송: ${auctionData.email} - ${auctionData.title}`);
           }
-        } catch (error) {
-          console.error('자동 종료 알림 발송 실패:', error);
-        }
+        } catch (error) {}
       } else {
-        // 입찰이 없었을 때는 판매자에게만 알림
         if (auctionData.email) {
           try {
             await sendApprovalNotificationEmail(
@@ -124,80 +99,45 @@ const autoEndExpiredAuctions = async () => {
               `${auctionData.title} 경매가 종료되었습니다. (입찰 없음)`,
               auctionData.id
             );
-            console.log(`📧 경매 종료 알림 발송: ${auctionData.email} - ${auctionData.title} (입찰 없음)`);
-          } catch (error) {
-            console.error('자동 종료 알림 발송 실패:', error);
-          }
+          } catch (error) {}
         }
       }
     }
-  } catch (error) {
-    console.error('자동 경매 종료 처리 실패:', error);
-  }
+  } catch (error) {}
 };
 
-// 1분마다 자동 종료 체크
-setInterval(autoEndExpiredAuctions, 60000); // 60초 = 1분
+// 1분마다 자동 종료 체크 (setInterval 중복 방지)
+if (!(global as any).__auctionAutoEndInterval) {
+  (global as any).__auctionAutoEndInterval = setInterval(autoEndExpiredAuctions, 60000); // 60초 = 1분
+}
 
 // 경매 이미지 업로드 API (파일 + DB 저장 방식)
 router.post('/upload-image', auth, upload.single('auctionImage'), async (req: AuthRequest, res) => {
   try {
-    console.log('📤 이미지 업로드 요청 받음:', {
-      body: req.body,
-      file: req.file ? {
-        originalname: req.file.originalname,
-        mimetype: req.file.mimetype,
-        size: req.file.size
-      } : null
-    });
-    
     if (!req.file) {
-      console.log('❌ 이미지 파일이 없음');
       return res.status(400).json({ message: '이미지 파일이 필요합니다.' });
     }
-    
-    console.log('📋 업로드된 파일 정보:', {
-      filename: req.file.filename,
-      originalname: req.file.originalname,
-      mimetype: req.file.mimetype,
-      size: req.file.size,
-      path: req.file.path
-    });
-    
     // 파일을 읽어서 DB에 저장
-    const fs = require('fs');
     const fileBuffer = fs.readFileSync(req.file.path);
-    
     // 이미지 ID 생성
     const imageId = `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
     // DB에 이미지 데이터 저장
     const db = getDatabase();
     const stmt = db.prepare(`
       INSERT INTO images (id, data, mime_type, size, created_at) 
       VALUES (?, ?, ?, ?, ?)
     `);
-    
     const now = new Date().toISOString();
     stmt.run(imageId, fileBuffer, req.file.mimetype, req.file.size, now);
-    
-    console.log('📤 이미지 DB 저장 성공:', {
-      imageId: imageId,
-      size: req.file.size,
-      mimeType: req.file.mimetype,
-      userId: req.user?.userId
-    });
-    
+    // 업로드 후 임시 파일 삭제
+    fs.unlinkSync(req.file.path);
     const finalImageUrl = `/images/${imageId}`;
-    console.log('📤 반환할 이미지 URL:', finalImageUrl);
-    
     res.json({ 
       message: '이미지 업로드 성공',
       imageId: imageId,
-      imageUrl: finalImageUrl // DB에서 조회하는 URL (/api 제거)
+      imageUrl: finalImageUrl
     });
   } catch (error) {
-    console.error('이미지 업로드 오류:', error);
     res.status(500).json({ message: '이미지 업로드에 실패했습니다.' });
   }
 });
@@ -237,7 +177,7 @@ router.get('/images/:imageId', async (req, res) => {
     
     res.send(image.data);
   } catch (error) {
-    console.error('이미지 조회 오류:', error);
+    // console.error('이미지 조회 오류:', error);
     res.status(500).json({ message: '이미지 조회에 실패했습니다.' });
   }
 });
@@ -331,7 +271,7 @@ router.get('/', async (req, res) => {
     
     res.json(formattedAuctions);
   } catch (error) {
-    console.error('Get auctions error:', error);
+    // console.error('Get auctions error:', error);
     res.status(500).json({ message: '경매 목록을 불러올 수 없습니다.' });
   }
 });
@@ -375,7 +315,7 @@ router.get('/ended', async (req, res) => {
 
           imageUrl = images[0] || null;
         } catch (error) {
-          console.error('이미지 파싱 오류:', error);
+          // console.error('이미지 파싱 오류:', error);
           images = [];
         }
       }
@@ -401,7 +341,7 @@ router.get('/ended', async (req, res) => {
     
     res.json(formattedAuctions);
   } catch (error) {
-    console.error('Get ended auctions error:', error);
+    // console.error('Get ended auctions error:', error);
     res.status(500).json({ message: '종료된 경매 목록을 불러올 수 없습니다.' });
   }
 });
@@ -459,7 +399,7 @@ router.get('/hot', async (req, res) => {
     
     res.json(result);
   } catch (error) {
-    console.error('Get hot auction error:', error);
+    // console.error('Get hot auction error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
@@ -505,7 +445,7 @@ router.get('/:id', async (req, res) => {
         auction.images = images;
         auction.imageUrl = images[0] || null;
       } catch (error) {
-        console.error('이미지 파싱 오류:', error);
+        // console.error('이미지 파싱 오류:', error);
         auction.images = [];
         auction.imageUrl = null;
       }
@@ -513,7 +453,7 @@ router.get('/:id', async (req, res) => {
     
     res.json(auction);
   } catch (error) {
-    console.error('Get auction error:', error);
+    // console.error('Get auction error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
@@ -597,7 +537,7 @@ router.post('/', auth, async (req: AuthRequest, res) => {
       auctionId: auctionId
     });
   } catch (error) {
-    console.error('Create auction error:', error);
+    // console.error('Create auction error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
@@ -672,12 +612,10 @@ router.post('/:id/bid', auth, async (req: AuthRequest, res) => {
     });
     
     // 입찰 성공 로그 추가
-    console.log(`[입찰 성공] 경매 ID: ${auctionId}, 사용자 ID: ${req.user?.userId}, 입찰 금액: ${amount}, 현재가: ${auction.current_price}`);
     
     // 입찰자에게 개인화된 알림 전송 (자신이 입찰한 것만)
     const bidderInfo = db.prepare('SELECT username FROM users WHERE id = ?').get(req.user?.userId) as any;
     if (bidderInfo) {
-      console.log(`✅ 입찰 알림: 사용자 ${bidderInfo.username}이 경매 ${auctionId}에 ${amount}원 입찰`);
     }
     
     // 입찰 수 및 참여자 수 조회
@@ -693,7 +631,7 @@ router.post('/:id/bid', auth, async (req: AuthRequest, res) => {
       lastBidTime: result.created_at
     });
   } catch (error) {
-    console.error('Create bid error:', error);
+    // console.error('Create bid error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
@@ -719,7 +657,7 @@ router.patch('/:id/end', auth, async (req: AuthRequest, res) => {
       message: '경매가 종료되었습니다.'
     });
   } catch (error) {
-    console.error('End auction error:', error);
+    // console.error('End auction error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
@@ -763,7 +701,7 @@ router.patch('/:id/approve', auth, async (req: AuthRequest, res) => {
       message: '경매가 승인되었습니다.'
     });
   } catch (error) {
-    console.error('Approve auction error:', error);
+    // console.error('Approve auction error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
@@ -785,7 +723,7 @@ router.patch('/:id/reject', auth, async (req: AuthRequest, res) => {
       message: '경매가 거부되었습니다.'
     });
   } catch (error) {
-    console.error('Reject auction error:', error);
+    // console.error('Reject auction error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
@@ -808,7 +746,7 @@ router.post('/:id/reject', auth, async (req: AuthRequest, res) => {
       message: '경매가 거부되었습니다.'
     });
   } catch (error) {
-    console.error('Reject auction (POST) error:', error);
+    // console.error('Reject auction (POST) error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
@@ -861,7 +799,6 @@ router.post('/:id/end', auth, async (req: AuthRequest, res) => {
             auction.current_price,
             parseInt(req.params.id)
           );
-          console.log(`✅ 낙찰 알림 이메일 발송: ${winnerInfo.email} - ${auction.title}`);
         }
         
         // 판매자에게 경매 종료 알림
@@ -872,10 +809,9 @@ router.post('/:id/end', auth, async (req: AuthRequest, res) => {
             `${auction.title} 경매가 종료되었습니다. 낙찰가: ${auction.current_price.toLocaleString()}원`,
             parseInt(req.params.id)
           );
-          console.log(`✅ 경매 종료 알림 이메일 발송: ${sellerInfo.email} - ${auction.title}`);
         }
       } catch (error) {
-        console.error('경매 종료 알림 이메일 발송 실패:', error);
+        // console.error('경매 종료 알림 이메일 발송 실패:', error);
       }
     } else {
       // 입찰이 없었을 때는 판매자에게만 알림
@@ -887,9 +823,8 @@ router.post('/:id/end', auth, async (req: AuthRequest, res) => {
             `${auction.title} 경매가 종료되었습니다. (입찰 없음)`,
             parseInt(req.params.id)
           );
-          console.log(`✅ 경매 종료 알림 이메일 발송: ${sellerInfo.email} - ${auction.title} (입찰 없음)`);
         } catch (error) {
-          console.error('경매 종료 알림 이메일 발송 실패:', error);
+          // console.error('경매 종료 알림 이메일 발송 실패:', error);
         }
       }
     }
@@ -911,7 +846,7 @@ router.post('/:id/end', auth, async (req: AuthRequest, res) => {
       message: '경매가 종료되었습니다.'
     });
   } catch (error) {
-    console.error('Admin end auction error:', error);
+    // console.error('Admin end auction error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
@@ -986,7 +921,7 @@ router.put('/:id', auth, async (req: AuthRequest, res) => {
       message: '경매 정보가 수정되었습니다.'
     });
   } catch (error) {
-    console.error('Update auction error:', error);
+    // console.error('Update auction error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
@@ -1041,7 +976,7 @@ router.post('/:id/delay-end', auth, async (req: AuthRequest, res) => {
       newEndTime: newEndTime.toISOString()
     });
   } catch (error) {
-    console.error('Delay end auction error:', error);
+    // console.error('Delay end auction error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
@@ -1100,7 +1035,7 @@ router.post('/:id/approve', auth, async (req: AuthRequest, res) => {
       endTime: endTime.toISOString()
     });
   } catch (error) {
-    console.error('Approve auction error:', error);
+    // console.error('Approve auction error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
@@ -1135,7 +1070,7 @@ router.get('/admin/pending', auth, async (req: AuthRequest, res) => {
     
     res.json(auctions);
   } catch (error) {
-    console.error('Get pending auctions error:', error);
+    // console.error('Get pending auctions error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
@@ -1189,7 +1124,7 @@ router.get('/admin/all', auth, async (req: AuthRequest, res) => {
     
     res.json(formattedAuctions);
   } catch (error) {
-    console.error('Get all auctions error:', error);
+    // console.error('Get all auctions error:', error);
     res.status(500).json({ message: '경매 목록을 불러올 수 없습니다.' });
   }
 });
@@ -1231,7 +1166,7 @@ router.get('/admin/logs', auth, async (req: AuthRequest, res) => {
       total: logs.length
     });
   } catch (error) {
-    console.error('Get logs error:', error);
+    // console.error('Get logs error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
@@ -1283,7 +1218,7 @@ router.post('/:id/set-hot', auth, async (req: AuthRequest, res) => {
           );
         }
       } catch (error) {
-        console.error('핫한 경매 알림 이메일 발송 실패:', error);
+        // console.error('핫한 경매 알림 이메일 발송 실패:', error);
       }
     }
     
@@ -1304,7 +1239,7 @@ router.post('/:id/set-hot', auth, async (req: AuthRequest, res) => {
       message: isHot ? '핫한 경매로 설정되었습니다.' : '핫한 경매 설정이 해제되었습니다.'
     });
   } catch (error) {
-    console.error('Set hot auction error:', error);
+    // console.error('Set hot auction error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
@@ -1364,7 +1299,7 @@ router.post('/test-email', auth, async (req: AuthRequest, res) => {
       res.status(500).json({ message: '이메일 발송에 실패했습니다.' });
     }
   } catch (error) {
-    console.error('Test email error:', error);
+    // console.error('Test email error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
@@ -1405,7 +1340,7 @@ router.get('/selling', auth, async (req: AuthRequest, res) => {
 
     res.json(processedAuctions);
   } catch (error) {
-    console.error('Failed to get selling auctions:', error);
+    // console.error('Failed to get selling auctions:', error);
     res.status(500).json({ error: '판매 중인 경매를 가져오는데 실패했습니다.' });
   }
 });
@@ -1446,7 +1381,7 @@ router.get('/bidding', auth, async (req: AuthRequest, res) => {
 
     res.json(processedAuctions);
   } catch (error) {
-    console.error('Failed to get bidding auctions:', error);
+    // console.error('Failed to get bidding auctions:', error);
     res.status(500).json({ error: '입찰한 경매를 가져오는데 실패했습니다.' });
   }
 });

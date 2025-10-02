@@ -67,36 +67,36 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   };
 
   const handleLogin = async () => {
-    console.log('🚀 로그인 시도 시작');
+    // console.log('🚀 로그인 시도 시작');
     
     if (!validateForm()) {
-      console.log('❌ 폼 검증 실패');
+      // console.log('❌ 폼 검증 실패');
       return;
     }
 
-    console.log('📤 로그인 데이터:', {
-      email: formData.email,
-      password: formData.password ? '***' : '비밀번호 없음'
-    });
+    // console.log('📤 로그인 데이터:', {
+    //   email: formData.email,
+    //   password: formData.password ? '***' : '비밀번호 없음'
+    // });
 
     setIsLoading(true);
     try {
       // 백엔드 서버 연결 테스트
-      console.log('🔗 백엔드 서버 연결 테스트 중...');
+      // console.log('🔗 백엔드 서버 연결 테스트 중...');
       try {
         const testResponse = await fetch('http://40.82.159.69:65000/api/health');
-        console.log('✅ 백엔드 서버 연결 성공:', testResponse.status);
+        // console.log('✅ 백엔드 서버 연결 성공:', testResponse.status);
       } catch (testError) {
-        console.error('❌ 백엔드 서버 연결 실패:', testError);
+        // console.error('❌ 백엔드 서버 연결 실패:', testError);
         Alert.alert('연결 오류', '백엔드 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.');
         return;
       }
       
-      console.log('🌐 백엔드 API 호출 중...');
+      // console.log('🌐 백엔드 API 호출 중...');
       
       // 직접 fetch로 테스트
       try {
-        console.log('🧪 직접 fetch 테스트 시작...');
+        // console.log('🧪 직접 fetch 테스트 시작...');
         const testResponse = await fetch('http://40.82.159.69:65000/api/auth/login', {
           method: 'POST',
           headers: {
@@ -107,27 +107,27 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             password: formData.password
           })
         });
-        console.log('🧪 직접 fetch 응답:', testResponse.status, testResponse.statusText);
+        // console.log('🧪 직접 fetch 응답:', testResponse.status, testResponse.statusText);
         
         if (testResponse.ok) {
           const testData = await testResponse.json();
-          console.log('🧪 직접 fetch 데이터:', testData);
+          // console.log('🧪 직접 fetch 데이터:', testData);
         }
       } catch (testError) {
-        console.error('🧪 직접 fetch 오류:', testError);
+        // console.error('🧪 직접 fetch 오류:', testError);
       }
       
       // 백엔드 API를 통한 로그인
       const response = await authAPI.login(formData.email, formData.password);
-      console.log('📥 API 응답 받음:', response);
-      console.log('👤 사용자 정보:', response.user);
-      console.log('📋 승인 상태:', response.user?.approval_status);
-      console.log('👑 사용자 타입:', response.user?.user_type);
+      // console.log('📥 API 응답 받음:', response);
+      // console.log('👤 사용자 정보:', response.user);
+      // console.log('📋 승인 상태:', response.user?.approval_status);
+      // console.log('👑 사용자 타입:', response.user?.user_type);
       
       if (response && response.user) {
         const user = response.user;
         
-        console.log('🔍 승인 상태 확인 중:', user.approval_status);
+        // console.log('🔍 승인 상태 확인 중:', user.approval_status);
         
         if (user.approval_status === 'pending') {
           Alert.alert(
@@ -139,10 +139,10 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           // 로그인 성공 - AuthContext를 통해 토큰과 사용자 정보 저장
           if (response.token) {
             await login(user, response.token);
-            console.log('🔑 토큰이 저장되었습니다:', response.token.substring(0, 20) + '...');
+            // console.log('🔑 토큰이 저장되었습니다:', response.token.substring(0, 20) + '...');
             
             // AuthContext가 자동으로 Main 화면으로 리다이렉트되므로 Alert 제거
-            console.log('✅ 로그인 완료 - 메인 화면으로 이동합니다');
+            // console.log('✅ 로그인 완료 - 메인 화면으로 이동합니다');
             navigation.navigate('Main');
           }
         } else if (user.approval_status === 'rejected') {
@@ -156,12 +156,12 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         Alert.alert('오류', '이메일 또는 비밀번호가 올바르지 않습니다.');
       }
     } catch (error) {
-      console.error('❌ 로그인 오류:', error);
+      // console.error('❌ 로그인 오류:', error);
       
       let errorMessage = '로그인 중 오류가 발생했습니다.';
       if (error instanceof Error) {
         errorMessage = error.message;
-        console.log('📝 에러 상세:', error.message);
+        // console.log('📝 에러 상세:', error.message);
       }
       
       Alert.alert('로그인 오류', errorMessage);

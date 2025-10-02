@@ -112,34 +112,24 @@ export default function AuctionDetailScreen() {
     if (!auction || auction.status !== 'active') return;
     
     const interval = setInterval(async () => {
-      // 실제 API 호출로 최신 데이터 가져오기
       try {
         const response = await fetch(`${workingUrl}/auctions/${auctionId}`);
         if (response.ok) {
           const auctionData = await response.json();
           const bids = auctionData.bids || [];
           
-                  // 실시간 데이터 업데이트
-        setRealTimeData(prev => {
-          const newData = {
-            currentPrice: auctionData.current_price,
-            bidCount: bids.length,
-            lastBidTime: bids.length > 0 ? new Date(bids[0].created_at) : prev.lastBidTime,
-            participants: auctionData.participantCount || 0,
-          };
+          setRealTimeData(prev => {
+            const newData = {
+              currentPrice: auctionData.current_price,
+              bidCount: bids.length,
+              lastBidTime: bids.length > 0 ? new Date(bids[0].created_at) : prev.lastBidTime,
+              participants: auctionData.participantCount || 0,
+            };
+            return newData;
+          });
           
-          // 가격이 변경되었을 때만 로그 출력
-          if (prev.currentPrice !== newData.currentPrice) {
-            console.log(`[실시간 업데이트] 경매 ID: ${auctionId}, 새로운 현재가: ${newData.currentPrice}, 입찰 수: ${newData.bidCount}, 참여자 수: ${newData.participants}, 마지막 입찰 시간: ${newData.lastBidTime}`);
-          }
-          
-          return newData;
-        });
-          
-          // 입찰 내역 업데이트
           setBidHistory(bids);
           
-          // 경매 정보 업데이트
           setAuction(prev => prev ? {
             ...prev,
             currentPrice: auctionData.current_price,
@@ -147,9 +137,9 @@ export default function AuctionDetailScreen() {
           } : null);
         }
       } catch (error) {
-        console.log('실시간 업데이트 실패:', error);
+        // 실시간 업데이트 실패 시 조용히 처리
       }
-    }, 1000); // 1초마다 업데이트
+    }, 5000); // 5초마다 업데이트
     
     return () => clearInterval(interval);
   }, [auction, auctionId]);

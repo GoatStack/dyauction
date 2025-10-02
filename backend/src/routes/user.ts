@@ -81,7 +81,6 @@ router.put('/profile', auth, async (req: AuthRequest, res) => {
 // 사용자가 생성한 경매 조회 (인증 필요)
 router.get('/auctions', auth, async (req: AuthRequest, res) => {
   try {
-    console.log('🔍 사용자 ID:', req.user?.userId, typeof req.user?.userId);
     const db = getDatabase();
     const auctions = db.prepare(`
       SELECT 
@@ -96,7 +95,6 @@ router.get('/auctions', auth, async (req: AuthRequest, res) => {
       ORDER BY a.created_at DESC
     `).all(parseInt(req.user?.userId || '0'));
     
-    console.log('📊 조회된 경매 수:', auctions.length);
     
     // 이미지 데이터 파싱 및 URL 변환 - 유틸리티 함수 사용
     const auctionsWithImages = auctions.map((auction: any) => {
@@ -197,16 +195,13 @@ router.get('/auctions/selling', auth, async (req: AuthRequest, res) => {
       let images = [];
       let imageUrl = null;
       
-      console.log('🔍 경매 이미지 데이터:', auction.images);
       
       if (auction.images) {
         try {
           images = JSON.parse(auction.images);
-          console.log('📸 파싱된 이미지 배열:', images);
           
           // 이미지 URL이 이미 웹 URL이므로 그대로 사용
           imageUrl = images[0] || null;
-          console.log('🌐 최종 이미지 URL:', imageUrl);
         } catch (error) {
           console.error('이미지 파싱 오류:', error);
           images = [];

@@ -61,7 +61,6 @@ export function logAuctionActivity(entry: LogEntry): void {
   logToFile(entry);
   
   // 콘솔에도 출력 (개발용)
-  console.log(`[Auction Log] ${entry.action} - Auction: ${entry.auctionId}, User: ${entry.userId}`);
 }
 
 // 로그 조회 함수

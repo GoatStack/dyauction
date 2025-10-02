@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         (global as any).token = storedToken;
       }
     } catch (error) {
-      console.error('저장된 인증 정보 로드 실패:', error);
+      // 저장된 인증 정보 로드 실패
     } finally {
       setIsLoading(false);
     }
@@ -61,8 +61,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (userData: User, authToken: string) => {
     try {
-      console.log('🔐 AuthContext - 로그인 시작:', userData.username);
-      
       await AsyncStorage.setItem('authToken', authToken);
       await AsyncStorage.setItem('authUser', JSON.stringify(userData));
       
@@ -70,10 +68,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(userData);
       // 글로벌 토큰도 설정 (기존 코드와의 호환성을 위해)
       (global as any).token = authToken;
-      
-      console.log('✅ AuthContext - 로그인 완료, 상태 업데이트됨');
     } catch (error) {
-      console.error('로그인 정보 저장 실패:', error);
       throw error;
     }
   };
@@ -88,7 +83,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // 글로벌 토큰도 제거
       (global as any).token = null;
     } catch (error) {
-      console.error('로그아웃 정보 삭제 실패:', error);
+      // 로그아웃 정보 삭제 실패
     }
   };
 

@@ -48,23 +48,21 @@ app.use((req, res, next) => {
     next();
   }
 });
-// 커스텀 body-parser 설정
-app.use((req, res, next) => {
-  if (req.headers['content-type']?.includes('application/json')) {
-    express.json({ 
-      limit: '100mb',
-      type: 'application/json'
-    })(req, res, next);
-  } else if (req.headers['content-type']?.includes('application/x-www-form-urlencoded')) {
-    express.urlencoded({ 
-      extended: true, 
-      limit: '100mb',
-      type: 'application/x-www-form-urlencoded'
-    })(req, res, next);
-  } else {
-    next();
-  }
+// 미들웨어 인스턴스를 미리 생성 (메모리 누수 방지)
+const jsonParser = express.json({ 
+  limit: '100mb',
+  type: 'application/json'
 });
+
+const urlencodedParser = express.urlencoded({ 
+  extended: true, 
+  limit: '100mb',
+  type: 'application/x-www-form-urlencoded'
+});
+
+// body-parser 미들웨어 등록 (Express가 자동으로 content-type에 따라 처리)
+app.use(jsonParser);
+app.use(urlencodedParser);
 
 // 정적 파일 서빙 (HTML, CSS, JS 등)
 app.use(express.static(path.join(__dirname, '..')));
