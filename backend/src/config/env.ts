@@ -5,7 +5,7 @@
 export const config = {
   // 서버 설정
   port: process.env.PORT || 65000,
-  serverUrl: process.env.SERVER_URL || process.env.EXTERNAL_URL || 'http://40.82.159.69:65000',
+  serverUrl: process.env.SERVER_URL || process.env.EXTERNAL_URL || 'https://40.82.159.69:65000',
   
   // JWT 설정
   jwtSecret: process.env.JWT_SECRET || 'your-secret-key',

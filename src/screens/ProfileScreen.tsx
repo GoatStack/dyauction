@@ -82,7 +82,7 @@ export default function ProfileScreen() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch('http://40.82.159.69:65000/api/users/profile', {
+      const response = await fetch('https://40.82.159.69:65000/api/users/profile', {
         headers: { 
           'Authorization': `Bearer ${token || 'test-token'}`,
           'Content-Type': 'application/json'
@@ -122,7 +122,7 @@ export default function ProfileScreen() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch('http://40.82.159.69:65000/api/users/stats', {
+      const response = await fetch('https://40.82.159.69:65000/api/users/stats', {
         headers: { 
           'Authorization': `Bearer ${token || 'test-token'}`,
           'Content-Type': 'application/json'
@@ -174,7 +174,7 @@ export default function ProfileScreen() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch(`http://40.82.159.69:65000/api/auctions?type=${tab}&userId=${user?.id}`, {
+      const response = await fetch(`https://40.82.159.69:65000/api/auctions?type=${tab}&userId=${user?.id}`, {
         headers: { 
           'Authorization': `Bearer ${token || 'test-token'}`,
           'Content-Type': 'application/json'

@@ -1,0 +1,139 @@
+# Query: http://
+# ContextLines: 1
+
+35개 결과 - 13 파일
+
+DEVELOPMENT.md:
+  129  1. **환경 변수 설정**
+  130:    - `base_url`: `http://localhost:3000`
+  131     - `token`: JWT 토큰 (로그인 후 설정)
+
+  141  # 로그인
+  142: curl -X POST http://localhost:3000/api/auth/login \
+  143    -H "Content-Type: application/json" \
+
+  146  # 경매 목록 조회
+  147: curl -X GET http://localhost:3000/api/auctions \
+  148    -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+README.md:
+   79  
+   80: 서버는 `http://localhost:65000`에서 실행됩니다.
+   81  
+
+  113  export const API_CONFIG = {
+  114:   BASE_URL: 'http://your-server-ip:65000/api',
+  115    // ...
+
+backend/src/index.ts:
+   21  app.use(cors({
+   22:   origin: ['http://localhost:8081', 'http://localhost:3000', 'http://localhost:19006', 'exp://192.168.0.36:8081'],
+   23    credentials: true,
+
+  107    console.log(`🚀 Server is running on port ${PORT}`);
+  108:   console.log(`📱 API Base URL: https://localhost:${PORT}/api`);
+  109:   console.log(`🌐 External API Base URL: https://40.82.159.69:${PORT}/api`);
+  110  });
+
+backend/src/config/env.ts:
+  7    port: process.env.PORT || 65000,
+  8:   serverUrl: process.env.SERVER_URL || process.env.EXTERNAL_URL || 'https://40.82.159.69:65000',
+  9    
+
+backend/src/utils/imageUtils.ts:
+  22    // 이미 완전한 URL인 경우 그대로 반환
+  23:   if (filename.startsWith('http://') || filename.startsWith('https://')) {
+  24      return filename;
+
+src/config/api.ts:
+   3    // 백엔드 서버 (올바른 주소로 수정)
+   4:   BASE_URL: __DEV__ ? 'https://40.82.159.69:65000/api' : 'https://40.82.159.69:65000/api',
+   5    
+
+  19  export const DEV_IP_ADDRESSES = [
+  20:   'https://40.82.159.69:65000/api',
+  21  ];
+
+  40      
+  41:     const response = await fetch('https://40.82.159.69:65000/api/health', {
+  42        method: 'GET',
+
+  48        console.log('✅ 현재 서버 주소로 연결 성공');
+  49:       return 'https://40.82.159.69:65000/api';
+  50      }
+
+  59      
+  60:     const response = await fetch('https://localhost:65000/api/health', {
+  61        method: 'GET',
+
+  67        console.log('✅ 로컬호스트로 연결 성공');
+  68:       return 'https://localhost:65000/api';
+  69      }
+
+  78      
+  79:     const response = await fetch('https://10.0.2.2:65000/api/health', {
+  80        method: 'GET',
+
+  86        console.log('✅ Android 에뮬레이터 IP로 연결 성공');
+  87:       return 'https://10.0.2.2:65000/api';
+  88      }
+
+src/screens/AuctionDetailScreen.tsx:
+  81    // API URL 설정
+  82:   const workingUrl = 'https://40.82.159.69:65000/api';
+  83  
+
+src/screens/ChangePasswordScreen.tsx:
+  38        // 실제 API 호출
+  39:       const response = await fetch('https://192.168.0.36:3000/api/users/change-password', {
+  40          method: 'POST',
+
+src/screens/EditProfileScreen.tsx:
+  325                  ) : user?.profileImage ? (
+  326:                   <Image source={{ uri: `https://192.168.0.36:3000${user.profileImage}` }} style={styles.profileImage} />
+  327                  ) : (
+
+src/screens/LoginScreen.tsx:
+   86        try {
+   87:         const testResponse = await fetch('https://40.82.159.69:65000/api/health');
+   88          // console.log('✅ 백엔드 서버 연결 성공:', testResponse.status);
+
+   99          // console.log('🧪 직접 fetch 테스트 시작...');
+  100:         const testResponse = await fetch('https://40.82.159.69:65000/api/auth/login', {
+  101            method: 'POST',
+
+src/screens/ProfileScreen.tsx:
+   84        
+   85:       const response = await fetch('https://40.82.159.69:65000/api/users/profile', {
+   86          headers: { 
+
+  124        
+  125:       const response = await fetch('https://40.82.159.69:65000/api/users/stats', {
+  126          headers: { 
+
+  176        
+  177:       const response = await fetch(`https://40.82.159.69:65000/api/auctions?type=${tab}&userId=${user?.id}`, {
+  178          headers: { 
+
+src/utils/database.ts:
+    5  const API_BASE_URL = __DEV__ 
+    6:   ? 'https://40.82.159.69:65000/api'  // 개발 환경
+    7:   : 'https://40.82.159.69:65000/api';  // 프로덕션
+    8  
+
+  134      // 백엔드 서버 상태 확인 (루트 경로 사용)
+  135:     const response = await fetch('https://40.82.159.69:65000/');
+  136      if (!response.ok) {
+
+src/utils/imageUtils.ts:
+    8    // 실제 환경에서는 API 설정에서 가져올 수 있음
+    9:   return 'https://40.82.159.69:65000'; // 기본 서버 URL
+   10  };
+
+   36    // 이미 웹 URL인 경우 /api/images/를 /api/auctions/images/로 수정
+   37:   if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+   38      // /api/images/를 /api/auctions/images/로 수정
+
+  125    
+  126:   return imageUrl.startsWith('http://') || imageUrl.startsWith('https://');
+  127  };

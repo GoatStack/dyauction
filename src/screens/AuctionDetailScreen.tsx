@@ -79,7 +79,7 @@ export default function AuctionDetailScreen() {
   const [isOwnAuction, setIsOwnAuction] = useState(false);
   
   // API URL 설정
-  const workingUrl = 'http://40.82.159.69:65000/api';
+  const workingUrl = 'https://40.82.159.69:65000/api';
 
   useEffect(() => {
     loadAuctionDetail();

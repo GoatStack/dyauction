@@ -6,7 +6,7 @@
 const getServerUrl = (): string => {
   // 환경변수나 설정에서 서버 URL 가져오기
   // 실제 환경에서는 API 설정에서 가져올 수 있음
-  return 'http://40.82.159.69:65000'; // 기본 서버 URL
+  return 'https://40.82.159.69:65000'; // 기본 서버 URL
 };
 
 /**

@@ -36,7 +36,7 @@ export default function ChangePasswordScreen() {
     setIsLoading(true);
     try {
       // 실제 API 호출
-      const response = await fetch('http://192.168.0.36:3000/api/users/change-password', {
+      const response = await fetch('https://192.168.0.36:3000/api/users/change-password', {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${(global as any).token || 'test-token'}`,
