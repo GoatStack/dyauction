@@ -47,6 +47,7 @@ interface Auction {
     id?: number;
   };
   bidCount: number;
+  participantCount?: number;
   imageUrl?: string;
   images?: string[];
 }
@@ -79,7 +80,7 @@ export default function AuctionDetailScreen() {
   const [isOwnAuction, setIsOwnAuction] = useState(false);
   
   // API URL 설정
-  const workingUrl = 'https://40.82.159.69:65000/api';
+  const workingUrl = 'http://40.82.159.69:65000/api';
 
   useEffect(() => {
     loadAuctionDetail();
@@ -249,16 +250,21 @@ export default function AuctionDetailScreen() {
       }
     } catch (error) {
       console.error('경매 상세 정보 로드 실패:', error);
-      console.error('오류 상세:', error.message);
+      if (typeof error === 'object' && error !== null && 'message' in error) {
+        console.error('오류 상세:', (error as { message: string }).message);
+      }
       
       // 더 구체적인 오류 메시지
       let errorMessage = '경매 정보를 불러올 수 없습니다.';
-      if (error.message.includes('Network')) {
-        errorMessage = '네트워크 연결을 확인해주세요.';
-      } else if (error.message.includes('404')) {
-        errorMessage = '경매를 찾을 수 없습니다.';
-      } else if (error.message.includes('500')) {
-        errorMessage = '서버 오류가 발생했습니다.';
+      if (typeof error === 'object' && error !== null && 'message' in error) {
+        const message = (error as { message: string }).message;
+        if (message.includes('Network')) {
+          errorMessage = '네트워크 연결을 확인해주세요.';
+        } else if (message.includes('404')) {
+          errorMessage = '경매를 찾을 수 없습니다.';
+        } else if (message.includes('500')) {
+          errorMessage = '서버 오류가 발생했습니다.';
+        }
       }
       
       Alert.alert('오류', errorMessage);
@@ -374,13 +380,15 @@ export default function AuctionDetailScreen() {
         const result = await response.json();
         
         // 입찰 성공 로그
-        console.log(`[입찰 성공] 경매: ${auction.title}, 금액: ${amount}, 새로운 현재가: ${result.newCurrentPrice}`);
+        console.log(`[입찰 성공] 경매: ${auction ? auction.title : ''}, 금액: ${amount}, 새로운 현재가: ${result.newCurrentPrice}`);
         
         // 입찰 성공 알림 추가
         const userData = await AsyncStorage.getItem('user');
         if (userData) {
           const user = JSON.parse(userData);
-          notificationManager.addBidPlacedNotification(user.id, auction.id, amount);
+          if (auction) {
+            notificationManager.addBidPlacedNotification(user.id, auction.id, amount);
+          }
         }
         
         // 실시간 데이터 즉시 업데이트
@@ -658,7 +666,6 @@ export default function AuctionDetailScreen() {
                   onValueChange={handleSliderChange}
                   minimumTrackTintColor="#4A90E2"
                   maximumTrackTintColor="#e0e0e0"
-                  thumbStyle={styles.sliderThumb}
                 />
                 <View style={styles.sliderRange}>
                   <Text style={styles.sliderMin}>₩{(realTimeData.currentPrice + 1000).toLocaleString()}</Text>

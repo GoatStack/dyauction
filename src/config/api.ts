@@ -1,7 +1,7 @@
 // API 설정
 export const API_CONFIG = {
   // 백엔드 서버 (올바른 주소로 수정)
-  BASE_URL: __DEV__ ? 'https://40.82.159.69:65000/api' : 'https://40.82.159.69:65000/api',
+  BASE_URL: __DEV__ ? 'http://40.82.159.69:65000/api' : 'https://40.82.159.69:65000/api',
   
   // API 엔드포인트
   ENDPOINTS: {
@@ -17,7 +17,7 @@ export const API_CONFIG = {
 
 // 개발 환경에서 사용할 수 있는 IP 주소들 (실제 IP 우선)
 export const DEV_IP_ADDRESSES = [
-  'https://40.82.159.69:65000/api',
+  'http://40.82.159.69:65000/api',
 ];
 
 // API URL 생성 헬퍼 함수
@@ -38,7 +38,7 @@ export const findWorkingApiUrl = async (): Promise<string> => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000);
     
-    const response = await fetch('https://40.82.159.69:65000/api/health', {
+    const response = await fetch('http://40.82.159.69:65000/api/health', {
       method: 'GET',
       signal: controller.signal
     });
@@ -46,7 +46,7 @@ export const findWorkingApiUrl = async (): Promise<string> => {
     clearTimeout(timeoutId);
     if (response.ok) {
       console.log('✅ 현재 서버 주소로 연결 성공');
-      return 'https://40.82.159.69:65000/api';
+      return 'http://40.82.159.69:65000/api';
     }
   } catch (error) {
     console.log('❌ 현재 서버 주소 연결 실패:', error);
@@ -57,7 +57,7 @@ export const findWorkingApiUrl = async (): Promise<string> => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000);
     
-    const response = await fetch('https://localhost:65000/api/health', {
+    const response = await fetch('http://localhost:65000/api/health', {
       method: 'GET',
       signal: controller.signal
     });
@@ -65,7 +65,7 @@ export const findWorkingApiUrl = async (): Promise<string> => {
     clearTimeout(timeoutId);
     if (response.ok) {
       console.log('✅ 로컬호스트로 연결 성공');
-      return 'https://localhost:65000/api';
+      return 'http://localhost:65000/api';
     }
   } catch (error) {
     console.log('❌ 로컬호스트 연결 실패:', error);
@@ -76,7 +76,7 @@ export const findWorkingApiUrl = async (): Promise<string> => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000);
     
-    const response = await fetch('https://10.0.2.2:65000/api/health', {
+    const response = await fetch('http://10.0.2.2:65000/api/health', {
       method: 'GET',
       signal: controller.signal
     });
@@ -84,7 +84,7 @@ export const findWorkingApiUrl = async (): Promise<string> => {
     clearTimeout(timeoutId);
     if (response.ok) {
       console.log('✅ Android 에뮬레이터 IP로 연결 성공');
-      return 'https://10.0.2.2:65000/api';
+      return 'http://10.0.2.2:65000/api';
     }
   } catch (error) {
     console.log('❌ Android 에뮬레이터 IP 연결 실패:', error);

@@ -19,6 +19,7 @@ import {
 import { LoginData } from '../types/auth';
 import { authAPI } from '../utils/database';
 import { useAuth } from '../contexts/AuthContext';
+import { API_CONFIG } from '../config/api'; // API_CONFIG 임포트 추가
 
 const { width, height } = Dimensions.get('window');
 
@@ -84,7 +85,9 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       // 백엔드 서버 연결 테스트
       // console.log('🔗 백엔드 서버 연결 테스트 중...');
       try {
-        const testResponse = await fetch('https://40.82.159.69:65000/api/health');
+        // API_CONFIG.BASE_URL을 사용하여 동적으로 URL 가져오기
+        const healthCheckUrl = `${API_CONFIG.BASE_URL.replace('/api', '')}/api/health`;
+        const testResponse = await fetch(healthCheckUrl);
         // console.log('✅ 백엔드 서버 연결 성공:', testResponse.status);
       } catch (testError) {
         // console.error('❌ 백엔드 서버 연결 실패:', testError);
@@ -97,15 +100,17 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       // 직접 fetch로 테스트
       try {
         // console.log('🧪 직접 fetch 테스트 시작...');
-        const testResponse = await fetch('https://40.82.159.69:65000/api/auth/login', {
+        const testResponse = await fetch('http://localhost:65000/api/auth/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': 'Bearer your-token-here',
           },
           body: JSON.stringify({
             email: formData.email,
             password: formData.password
-          })
+          }),
+          credentials: 'include'
         });
         // console.log('🧪 직접 fetch 응답:', testResponse.status, testResponse.statusText);
         

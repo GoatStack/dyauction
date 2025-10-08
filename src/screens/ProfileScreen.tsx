@@ -17,6 +17,7 @@ import { User } from '../types/auth';
 import { AuctionItem } from '../types/auction';
 import { useAuth } from '../contexts/AuthContext';
 import { normalizeImageUrl } from '../utils/imageUtils';
+import { getApiUrl, API_CONFIG } from '../config/api';
 
 interface ProfileStats {
   sales: number;
@@ -82,7 +83,7 @@ export default function ProfileScreen() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch('https://40.82.159.69:65000/api/users/profile', {
+      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USERS + '/profile'), {
         headers: { 
           'Authorization': `Bearer ${token || 'test-token'}`,
           'Content-Type': 'application/json'
@@ -122,7 +123,7 @@ export default function ProfileScreen() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch('https://40.82.159.69:65000/api/users/stats', {
+      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USERS + '/stats'), {
         headers: { 
           'Authorization': `Bearer ${token || 'test-token'}`,
           'Content-Type': 'application/json'
@@ -174,7 +175,7 @@ export default function ProfileScreen() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch(`https://40.82.159.69:65000/api/auctions?type=${tab}&userId=${user?.id}`, {
+      const response = await fetch(getApiUrl(`${API_CONFIG.ENDPOINTS.AUCTIONS}?type=${tab}&userId=${user?.id}`), {
         headers: { 
           'Authorization': `Bearer ${token || 'test-token'}`,
           'Content-Type': 'application/json'
@@ -272,7 +273,7 @@ export default function ProfileScreen() {
         activeOpacity={0.7}
       >
         <Card style={styles.auctionCard}>
-          <Card.Cover source={{ uri: convertImageUrl(item.imageUrl) }} style={styles.auctionImage} />
+          <Card.Cover source={{ uri: normalizeImageUrl(item.imageUrl) }} style={styles.auctionImage} />
         <Card.Content style={styles.auctionContent}>
           <Text style={styles.auctionTitle} numberOfLines={1}>
             {item.title}
@@ -315,7 +316,7 @@ export default function ProfileScreen() {
       >
         <View style={styles.newAuctionCard}>
           <View style={styles.newAuctionImageContainer}>
-            <Image source={{ uri: convertImageUrl(item.imageUrl) }} style={styles.newAuctionImage} />
+            <Image source={{ uri: normalizeImageUrl(item.imageUrl) }} style={styles.newAuctionImage} />
           <View style={styles.newAuctionStatusBadge}>
             <Text style={styles.newAuctionStatusText}>
               {item.status === 'active' ? '진행중' : '종료됨'}

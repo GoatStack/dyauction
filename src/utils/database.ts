@@ -3,8 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // 백엔드 API 기본 URL
 // React Native 시뮬레이터에서는 localhost 대신 127.0.0.1 (iOS) 사용
 const API_BASE_URL = __DEV__ 
-  ? 'https://40.82.159.69:65000/api'  // 개발 환경
-  : 'https://40.82.159.69:65000/api';  // 프로덕션
+  ? 'http://localhost:65000/api'  // 개발 환경
+  : 'https://localhost:65000/api';  // 프로덕션
 
 // API 호출 헬퍼 함수
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
@@ -27,10 +27,15 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
         };
     
     const response = await fetch(url, {
-      headers,
+      headers: {
+    'Content-Type': 'application/json',
+    // 필요한 경우 Authorization 헤더 추가
+    'Authorization': `Bearer ${token}`,
+  },
       ...options,
       // HTTP 요청 허용을 위한 설정
       mode: 'cors',
+      credentials: 'include',
     });
 
     // 401 에러 시 토큰 갱신 시도
@@ -132,12 +137,12 @@ const refreshToken = async (): Promise<string | null> => {
 export const initDatabase = async (): Promise<void> => {
   try {
     // 백엔드 서버 상태 확인 (루트 경로 사용)
-    const response = await fetch('https://40.82.159.69:65000/');
+    const response = await fetch(__DEV__ ? 'http://40.82.159.69:65000/' : 'https://40.82.159.69:65000/');
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-  } catch (error) {
-    console.error('백엔드 서버 연결 실패:', error.message);
+  } catch (error: unknown) {
+    console.error('백엔드 서버 연결 실패:', (error as Error).message);
     throw error;
   }
 };
@@ -176,7 +181,11 @@ export const authAPI = {
   login: async (email: string, password: string) => {
     return apiCall('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, password }),
+    credentials: 'include',
     });
   },
 };

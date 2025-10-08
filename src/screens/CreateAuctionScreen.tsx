@@ -67,6 +67,8 @@ export default function CreateAuctionScreen() {
     }
   };
 
+  const workingUrl = 'http://40.82.159.69:65000/api';
+
   // 카테고리 옵션
   const categoryOptions = [
     '전자기기', '의류', '도서', '게임', '가전', '스포츠', '뷰티', '기타'
@@ -222,7 +224,11 @@ export default function CreateAuctionScreen() {
           throw new Error(`이미지 업로드 실패: ${response.status}`);
         }
       } catch (error) {
-        console.error('이미지 업로드 오류:', error.message);
+        if (error instanceof Error) {
+          console.error('이미지 업로드 오류:', error.message);
+        } else {
+          console.error('이미지 업로드 오류:', error);
+        }
         throw error;
       }
     }

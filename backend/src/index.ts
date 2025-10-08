@@ -16,38 +16,13 @@ const PORT = process.env.PORT || 65000;
 
 // 데이터베이스 초기화
 initDatabase();
-
 // 미들웨어
 app.use(cors({
-  origin: ['http://localhost:8081', 'http://localhost:3000', 'http://localhost:19006', 'exp://192.168.0.36:8081'],
-  credentials: true,
+  origin: 'http://localhost:8082',  // 클라이언트의 오리진
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  credentials: true,  // 쿠키를 포함한 요청을 허용
 }));
-
-// 추가 CORS 헤더 설정
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (origin && (
-    origin.includes('localhost') || 
-    origin.includes('192.168.') || 
-    origin.includes('10.0.2.2') ||
-    origin.includes('exp://')
-  )) {
-    res.header('Access-Control-Allow-Origin', origin);
-  } else {
-    res.header('Access-Control-Allow-Origin', '*');
-  }
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
-});
 // 미들웨어 인스턴스를 미리 생성 (메모리 누수 방지)
 const jsonParser = express.json({ 
   limit: '100mb',
@@ -116,6 +91,16 @@ process.on('SIGINT', () => {
     console.log('✅ Server closed');
     process.exit(0);
   });
+});
+
+// CORS headers are already set via the cors middleware above.
+app.options('*', (req, res) => {
+  console.log('OPTIONS headers from client:', req.headers);
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8082');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.sendStatus(200);
 });
 
 export default app;
