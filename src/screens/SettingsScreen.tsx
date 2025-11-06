@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Alert, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  Text, 
+import {
+  Text,
   Card,
   IconButton,
   Switch,
@@ -10,9 +10,11 @@ import {
   Divider
 } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function SettingsScreen() {
   const navigation = useNavigation<any>();
+  const { logout } = useAuth();
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const [autoLogin, setAutoLogin] = useState(true);
@@ -23,10 +25,11 @@ export default function SettingsScreen() {
       '정말 로그아웃하시겠습니까?',
       [
         { text: '취소', style: 'cancel' },
-        { 
-          text: '로그아웃', 
+        {
+          text: '로그아웃',
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
+            await logout();
             navigation.navigate('Welcome');
           }
         }

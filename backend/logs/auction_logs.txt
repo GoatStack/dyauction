@@ -102,3 +102,5 @@
 [2025-11-06T08:55:35.257Z] created | Auction: 19 | User: 3 | Details: {"title":"flower","category":"의류","startingPrice":11111,"duration":"1h","status":"pending"}
 [2025-11-06T08:58:20.542Z] approved | Auction: 19 | User: 3 | Details: {"startTime":"2025-11-06T08:58:20.539Z","endTime":"2025-11-06T09:58:20.539Z","duration":60}
 [2025-11-06T09:00:21.169Z] created | Auction: 20 | User: 3 | Details: {"title":"최종 테스트 경매","category":"전자기기","startingPrice":50000,"duration":"1d","status":"pending"}
+[2025-11-06T09:29:43.797Z] created | Auction: 21 | User: 9 | Details: {"title":"신규 사용자 경매","category":"도서","startingPrice":30000,"duration":"1d","status":"pending"}
+[2025-11-06T09:33:17.929Z] bid_placed | Auction: 19 | User: 10 | Details: {"amount":12111,"previousPrice":11111,"newPrice":12111}

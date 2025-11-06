@@ -86,6 +86,8 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
         }
       } catch (refreshError) {
         // 토큰 갱신 실패 시 로그아웃 처리
+        await AsyncStorage.removeItem('authToken')
+        await AsyncStorage.removeItem('authUser')
         ;(global as any).token = null
         throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.')
       }
