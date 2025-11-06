@@ -25,7 +25,7 @@ import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/nativ
 import { notificationManager } from '../utils/notificationManager';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { normalizeImageUrl, formatAuctionImages } from '../utils/imageUtils';
-import { findWorkingApiUrl } from '../config/api';
+import { findWorkingApiUrl, API_CONFIG } from '../config/api';
 
 const { width, height } = Dimensions.get('window');
 
@@ -78,9 +78,6 @@ export default function AuctionDetailScreen() {
   });
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isOwnAuction, setIsOwnAuction] = useState(false);
-  
-  // API URL 설정
-  const workingUrl = 'http://40.82.159.69:65000/api';
 
   useEffect(() => {
     loadAuctionDetail();
@@ -114,7 +111,7 @@ export default function AuctionDetailScreen() {
     
     const interval = setInterval(async () => {
       try {
-        const response = await fetch(`${workingUrl}/auctions/${auctionId}`);
+        const response = await fetch(`${API_CONFIG.BASE_URL}/auctions/${auctionId}`);
         if (response.ok) {
           const auctionData = await response.json();
           const bids = auctionData.bids || [];
@@ -170,11 +167,11 @@ export default function AuctionDetailScreen() {
   const loadAuctionDetail = async () => {
     try {
       setLoading(true);
-      
-      console.log('🌐 경매 상세 API 호출 주소:', workingUrl);
-      console.log('📡 경매 상세 요청 URL:', `${workingUrl}/auctions/${auctionId}`);
-      
-      const response = await fetch(`${workingUrl}/auctions/${auctionId}`);
+
+      console.log('🌐 경매 상세 API 호출 주소:', API_CONFIG.BASE_URL);
+      console.log('📡 경매 상세 요청 URL:', `${API_CONFIG.BASE_URL}/auctions/${auctionId}`);
+
+      const response = await fetch(`${API_CONFIG.BASE_URL}/auctions/${auctionId}`);
       
       if (response.ok) {
         const auctionData = await response.json();
@@ -367,7 +364,7 @@ export default function AuctionDetailScreen() {
         return;
       }
 
-      const response = await fetch(`${workingUrl}/auctions/${auctionId}/bid`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/auctions/${auctionId}/bid`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -20,7 +20,7 @@ import {
 } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
-import { getApiUrl, findWorkingApiUrl } from '../config/api';
+import { API_CONFIG } from '../config/api';
 import { notificationManager } from '../utils/notificationManager';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -66,8 +66,6 @@ export default function CreateAuctionScreen() {
       });
     }
   };
-
-  const workingUrl = 'http://40.82.159.69:65000/api';
 
   // 카테고리 옵션
   const categoryOptions = [
@@ -154,13 +152,18 @@ export default function CreateAuctionScreen() {
   // 네트워크 상태 확인 (간단한 버전)
   const checkNetworkStatus = async () => {
     try {
-      const workingUrl = await findWorkingApiUrl();
-      const response = await fetch(`${workingUrl}/health`, { 
+      console.log('🔍 네트워크 상태 확인 시작');
+      console.log('📍 Health Check URL:', `${API_CONFIG.BASE_URL}/health`);
+      const response = await fetch(`${API_CONFIG.BASE_URL}/health`, {
         method: 'GET'
       });
+      console.log('✅ Health Check 응답:', response.ok, response.status);
       return response.ok;
     } catch (error) {
-      console.log('네트워크 상태 확인 실패:', error);
+      console.log('❌ 네트워크 상태 확인 실패:', error);
+      if (error instanceof Error) {
+        console.log('❌ 에러 메시지:', error.message);
+      }
       return false;
     }
   };
@@ -194,45 +197,60 @@ export default function CreateAuctionScreen() {
   // 이미지 업로드 함수
   const uploadImages = async (imageUris: string[]): Promise<string[]> => {
     const uploadedUrls: string[] = [];
-    
-    for (const imageUri of imageUris) {
+
+    console.log('📸 이미지 업로드 시작, 총', imageUris.length, '개');
+
+    for (let i = 0; i < imageUris.length; i++) {
+      const imageUri = imageUris[i];
       try {
-        
+        console.log(`📤 이미지 ${i + 1}/${imageUris.length} 업로드 중...`);
+        console.log('🖼️ 이미지 URI:', imageUri.substring(0, 50) + '...');
+
         // FormData 생성
         const formData = await createFormData(imageUri);
-        
-        const workingUrl = await findWorkingApiUrl();
-        
-        const response = await fetch(`${workingUrl}/auctions/upload-image`, {
+
+        const uploadUrl = `${API_CONFIG.BASE_URL}/auctions/upload-image`;
+        console.log('📍 업로드 URL:', uploadUrl);
+        console.log('🔑 토큰:', token ? `${token.substring(0, 20)}...` : 'test-token');
+
+        console.log('🚀 이미지 업로드 Fetch 시작...');
+        const response = await fetch(uploadUrl, {
           method: 'POST',
-          headers: { 
+          headers: {
             'Authorization': `Bearer ${token || 'test-token'}`,
             // Content-Type은 FormData일 때 자동으로 설정됨
           },
           body: formData,
         });
 
+        console.log('✅ Fetch 완료');
+        console.log('📊 Response Status:', response.status);
+        console.log('📊 Response OK:', response.ok);
+
         if (response.ok) {
           const result = await response.json();
-          
-          // 백엔드에서 반환하는 imageUrl이 /images/{imageId} 형태이므로 workingUrl과 결합
-          const imageUrl = `${workingUrl}${result.imageUrl}`;
+          console.log('✅ 이미지 업로드 성공:', result);
+
+          // 백엔드에서 반환하는 imageUrl이 /images/{imageId} 형태이므로 BASE_URL과 결합
+          const imageUrl = `${API_CONFIG.BASE_URL}${result.imageUrl}`;
+          console.log('🔗 최종 이미지 URL:', imageUrl);
           uploadedUrls.push(imageUrl);
         } else {
           const errorText = await response.text();
-          console.error('이미지 업로드 실패:', errorText);
+          console.error('❌ 이미지 업로드 실패:', errorText);
           throw new Error(`이미지 업로드 실패: ${response.status}`);
         }
       } catch (error) {
+        console.error(`❌ 이미지 ${i + 1} 업로드 오류:`, error);
         if (error instanceof Error) {
-          console.error('이미지 업로드 오류:', error.message);
-        } else {
-          console.error('이미지 업로드 오류:', error);
+          console.error('❌ 오류 메시지:', error.message);
+          console.error('❌ 오류 스택:', error.stack);
         }
         throw error;
       }
     }
-    
+
+    console.log('✅ 모든 이미지 업로드 완료:', uploadedUrls);
     return uploadedUrls;
   };
 
@@ -254,13 +272,13 @@ export default function CreateAuctionScreen() {
       console.log('📤 경매 이미지 업로드 시작...');
       const imageUrls = await uploadImages(formData.imageUris);
       console.log('✅ 업로드된 이미지 URLs:', imageUrls);
-      
+
       // 경매 등록 API 호출
-      const workingUrl = await findWorkingApiUrl();
-      console.log('🌐 경매 등록 API 호출 주소:', workingUrl);
-      console.log('📡 경매 등록 요청 URL:', `${workingUrl}/auctions`);
-      
-      const response = await fetch(`${workingUrl}/auctions`, {
+      const auctionUrl = `${API_CONFIG.BASE_URL}/auctions`;
+      console.log('🌐 경매 등록 API 호출 주소:', API_CONFIG.BASE_URL);
+      console.log('📡 경매 등록 요청 URL:', auctionUrl);
+
+      const response = await fetch(auctionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -4,9 +4,18 @@
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
+    "start:local": "cp .env.local .env && expo start",
+    "start:prod": "cp .env.production .env && expo start",
     "android": "expo start --android",
+    "android:local": "cp .env.local .env && expo start --android",
+    "android:prod": "cp .env.production .env && expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "ios:local": "cp .env.local .env && expo start --ios",
+    "ios:prod": "cp .env.production .env && expo start --ios",
+    "web": "expo start --web",
+    "build:android": "cp .env.production .env && eas build --platform android",
+    "build:ios": "cp .env.production .env && eas build --platform ios",
+    "build:all": "cp .env.production .env && eas build --platform all"
   },
   "dependencies": {
     "@expo/cli": "^54.0.9",
@@ -35,6 +44,7 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~19.1.13",
+    "react-native-dotenv": "^3.4.11",
     "typescript": "~5.8.3"
   },
   "private": true

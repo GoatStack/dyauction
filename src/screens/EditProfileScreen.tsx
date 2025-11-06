@@ -12,7 +12,7 @@ import {
 } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
-import { getApiUrl } from '../config/api';
+import { getApiUrl, API_CONFIG } from '../config/api';
 
 interface User {
   id: string;
@@ -323,7 +323,7 @@ export default function EditProfileScreen() {
                 {profileImage ? (
                   <Image source={{ uri: profileImage }} style={styles.profileImage} />
                 ) : user?.profileImage ? (
-                  <Image source={{ uri: `http://192.168.0.36:3000${user.profileImage}` }} style={styles.profileImage} />
+                  <Image source={{ uri: `${API_CONFIG.BASE_URL.replace('/api', '')}${user.profileImage}` }} style={styles.profileImage} />
                 ) : (
                   <Avatar.Text size={80} label={user?.name?.charAt(0) || 'U'} />
                 )}

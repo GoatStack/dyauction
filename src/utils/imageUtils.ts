@@ -2,11 +2,12 @@
  * 프론트엔드 이미지 URL 처리 유틸리티 함수들
  */
 
+import { API_CONFIG } from '../config/api';
+
 // 서버 URL 설정 (환경에 따라 변경 가능)
 const getServerUrl = (): string => {
-  // 환경변수나 설정에서 서버 URL 가져오기
-  // 실제 환경에서는 API 설정에서 가져올 수 있음
-  return __DEV__ ? 'http://40.82.159.69:65000' : 'https://40.82.159.69:65000'; // 기본 서버 URL
+  // API_CONFIG에서 서버 URL 가져오기 (/api 제거)
+  return API_CONFIG.BASE_URL.replace('/api', '');
 };
 
 /**

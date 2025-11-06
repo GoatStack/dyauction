@@ -67,108 +67,98 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     return true;
   };
 
+  // 서버 헬스 체크
+  const checkServerHealth = async (): Promise<boolean> => {
+    try {
+      const healthCheckUrl = `${API_CONFIG.BASE_URL.replace('/api', '')}/api/health`;
+      if (__DEV__) {
+        console.log('Health check URL:', healthCheckUrl);
+      }
+
+      const response = await fetch(healthCheckUrl);
+      return response.ok;
+    } catch (error) {
+      if (__DEV__) {
+        console.error('Server health check failed:', error);
+      }
+      return false;
+    }
+  };
+
+  // 승인 상태에 따른 처리
+  const handleApprovalStatus = async (user: any, token: string): Promise<boolean> => {
+    switch (user.approval_status) {
+      case 'pending':
+        Alert.alert(
+          '승인 대기 중',
+          '관리자 승인을 기다리고 있습니다. 승인 후 로그인이 가능합니다.'
+        );
+        return false;
+
+      case 'approved':
+        await login(user, token);
+        if (__DEV__) {
+          console.log('Login successful');
+        }
+        navigation.navigate('Main');
+        return true;
+
+      case 'rejected':
+        Alert.alert(
+          '승인 거부',
+          '회원가입이 거부되었습니다. 관리자에게 문의하세요.'
+        );
+        return false;
+
+      default:
+        Alert.alert('오류', '알 수 없는 승인 상태입니다.');
+        return false;
+    }
+  };
+
   const handleLogin = async () => {
-    // console.log('🚀 로그인 시도 시작');
-    
     if (!validateForm()) {
-      // console.log('❌ 폼 검증 실패');
       return;
     }
 
-    // console.log('📤 로그인 데이터:', {
-    //   email: formData.email,
-    //   password: formData.password ? '***' : '비밀번호 없음'
-    // });
-
     setIsLoading(true);
+
     try {
-      // 백엔드 서버 연결 테스트
-      // console.log('🔗 백엔드 서버 연결 테스트 중...');
-      try {
-        // API_CONFIG.BASE_URL을 사용하여 동적으로 URL 가져오기
-        const healthCheckUrl = `${API_CONFIG.BASE_URL.replace('/api', '')}/api/health`;
-        const testResponse = await fetch(healthCheckUrl);
-        // console.log('✅ 백엔드 서버 연결 성공:', testResponse.status);
-      } catch (testError) {
-        // console.error('❌ 백엔드 서버 연결 실패:', testError);
-        Alert.alert('연결 오류', '백엔드 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.');
+      // 서버 연결 확인
+      const isServerHealthy = await checkServerHealth();
+      if (!isServerHealthy) {
+        Alert.alert(
+          '연결 오류',
+          '백엔드 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.'
+        );
         return;
       }
-      
-      // console.log('🌐 백엔드 API 호출 중...');
-      
-      // 직접 fetch로 테스트
-      try {
-        // console.log('🧪 직접 fetch 테스트 시작...');
-        const testResponse = await fetch('http://localhost:65000/api/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer your-token-here',
-          },
-          body: JSON.stringify({
-            email: formData.email,
-            password: formData.password
-          }),
-          credentials: 'include'
-        });
-        // console.log('🧪 직접 fetch 응답:', testResponse.status, testResponse.statusText);
-        
-        if (testResponse.ok) {
-          const testData = await testResponse.json();
-          // console.log('🧪 직접 fetch 데이터:', testData);
-        }
-      } catch (testError) {
-        // console.error('🧪 직접 fetch 오류:', testError);
-      }
-      
-      // 백엔드 API를 통한 로그인
+
+      // 로그인 API 호출
       const response = await authAPI.login(formData.email, formData.password);
-      // console.log('📥 API 응답 받음:', response);
-      // console.log('👤 사용자 정보:', response.user);
-      // console.log('📋 승인 상태:', response.user?.approval_status);
-      // console.log('👑 사용자 타입:', response.user?.user_type);
-      
-      if (response && response.user) {
-        const user = response.user;
-        
-        // console.log('🔍 승인 상태 확인 중:', user.approval_status);
-        
-        if (user.approval_status === 'pending') {
-          Alert.alert(
-            '승인 대기 중',
-            '관리자 승인을 기다리고 있습니다. 승인 후 로그인이 가능합니다.',
-            [{ text: '확인' }]
-          );
-        } else if (user.approval_status === 'approved') {
-          // 로그인 성공 - AuthContext를 통해 토큰과 사용자 정보 저장
-          if (response.token) {
-            await login(user, response.token);
-            // console.log('🔑 토큰이 저장되었습니다:', response.token.substring(0, 20) + '...');
-            
-            // AuthContext가 자동으로 Main 화면으로 리다이렉트되므로 Alert 제거
-            // console.log('✅ 로그인 완료 - 메인 화면으로 이동합니다');
-            navigation.navigate('Main');
-          }
-        } else if (user.approval_status === 'rejected') {
-          Alert.alert(
-            '승인 거부',
-            '회원가입이 거부되었습니다. 관리자에게 문의하세요.',
-            [{ text: '확인' }]
-          );
-        }
-      } else {
+
+      if (!response?.user) {
         Alert.alert('오류', '이메일 또는 비밀번호가 올바르지 않습니다.');
+        return;
       }
+
+      if (!response.token) {
+        Alert.alert('오류', '인증 토큰을 받지 못했습니다.');
+        return;
+      }
+
+      // 승인 상태 처리
+      await handleApprovalStatus(response.user, response.token);
+
     } catch (error) {
-      // console.error('❌ 로그인 오류:', error);
-      
-      let errorMessage = '로그인 중 오류가 발생했습니다.';
-      if (error instanceof Error) {
-        errorMessage = error.message;
-        // console.log('📝 에러 상세:', error.message);
+      if (__DEV__) {
+        console.error('Login error:', error);
       }
-      
+
+      const errorMessage = error instanceof Error
+        ? error.message
+        : '로그인 중 오류가 발생했습니다.';
+
       Alert.alert('로그인 오류', errorMessage);
     } finally {
       setIsLoading(false);
