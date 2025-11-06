@@ -100,7 +100,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         if (__DEV__) {
           console.log('Login successful');
         }
-        navigation.navigate('Main');
+        // AuthNavigator가 자동으로 Main 화면으로 전환하므로 수동 navigate 불필요
         return true;
 
       case 'rejected':

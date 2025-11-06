@@ -99,12 +99,34 @@ export default function MainScreen({ navigation }: MainScreenProps) {
   const loadAuctions = async () => {
     try {
       setLoading(true);
-      const [activeResponse, endedResponse, hotResponse] = await Promise.all([
-        auctionAPI.getActiveAuctions(),
-        auctionAPI.getEndedAuctions(),
-        auctionAPI.getHotAuction()
-      ]);
-      
+
+      // 각각의 API 호출을 개별적으로 처리하여 하나가 실패해도 다른 것들은 정상 동작하도록
+      let activeResponse = [];
+      let endedResponse = [];
+      let hotResponse = null;
+
+      try {
+        activeResponse = await auctionAPI.getActiveAuctions();
+      } catch (error: any) {
+        console.log('활성 경매 로드 실패:', error?.message);
+        // 경매가 없는 경우는 빈 배열로 처리
+        activeResponse = [];
+      }
+
+      try {
+        endedResponse = await auctionAPI.getEndedAuctions();
+      } catch (error: any) {
+        console.log('종료된 경매 로드 실패:', error?.message);
+        endedResponse = [];
+      }
+
+      try {
+        hotResponse = await auctionAPI.getHotAuction();
+      } catch (error: any) {
+        console.log('핫한 경매 로드 실패:', error?.message);
+        hotResponse = null;
+      }
+
       // 활성 경매 처리
       const processedActiveAuctions = (activeResponse || []).map((auction: any) => {
         let images: string[] = [];
@@ -112,35 +134,10 @@ export default function MainScreen({ navigation }: MainScreenProps) {
           try {
             images = JSON.parse(auction.images);
           } catch (e) {
-            // console.log('이미지 파싱 실패, 단일 이미지로 처리');
             images = [auction.images];
           }
         }
-        
-        const result = {
-          ...auction,
-          images: images,
-          imageUrl: images.length > 0 ? images[0] : auction.imageUrl,
-          participantCount: auction.participantCount || 0
-        };
-        
-        // 디버깅 로그 제거
-        
-        return result;
-      });
-      
-      // 종료된 경매 처리
-      const processedEndedAuctions = (endedResponse || []).map((auction: any) => {
-        let images: string[] = [];
-        if (auction.images) {
-          try {
-            images = JSON.parse(auction.images);
-          } catch (e) {
-            // console.log('이미지 파싱 실패, 단일 이미지로 처리');
-            images = [auction.images];
-          }
-        }
-        
+
         return {
           ...auction,
           images: images,
@@ -148,59 +145,61 @@ export default function MainScreen({ navigation }: MainScreenProps) {
           participantCount: auction.participantCount || 0
         };
       });
-      
+
+      // 종료된 경매 처리
+      const processedEndedAuctions = (endedResponse || []).map((auction: any) => {
+        let images: string[] = [];
+        if (auction.images) {
+          try {
+            images = JSON.parse(auction.images);
+          } catch (e) {
+            images = [auction.images];
+          }
+        }
+
+        return {
+          ...auction,
+          images: images,
+          imageUrl: images.length > 0 ? images[0] : auction.imageUrl,
+          participantCount: auction.participantCount || 0
+        };
+      });
+
       // 핫한 경매 처리
       let processedHotAuction = null;
       if (hotResponse) {
-        // console.log('🔥 핫한 경매 원본 데이터:', hotResponse);
-        
         let images: string[] = [];
         if (hotResponse.images) {
           try {
             images = JSON.parse(hotResponse.images);
-            // console.log('🔥 핫한 경매 파싱된 이미지 배열:', images);
           } catch (e) {
-            // console.log('🔥 핫한 경매 이미지 파싱 실패, 단일 이미지로 처리:', hotResponse.images);
             images = [hotResponse.images];
           }
         }
-        
+
         const finalImageUrl = images.length > 0 ? images[0] : hotResponse.imageUrl;
-        // console.log('🔥 핫한 경매 최종 이미지 URL:', finalImageUrl);
-        // console.log('🔥 핫한 경매 convertImageUrl 결과:', convertImageUrl(finalImageUrl));
-        
+
         processedHotAuction = {
           ...hotResponse,
           images: images,
           imageUrl: finalImageUrl,
           participantCount: hotResponse.participantCount || 0
         };
-        
-        // console.log('🔥 핫한 경매 최종 처리된 데이터:', processedHotAuction);
       }
-      
+
       setAuctions(processedActiveAuctions);
       setEndedAuctions(processedEndedAuctions);
       setHotAuction(processedHotAuction);
     } catch (error: any) {
-      // console.error('경매 목록 로드 실패:', error);
-      // console.error('에러 상세 정보:', {
-      //   message: error?.message || '알 수 없는 오류',
-      //   stack: error?.stack || '스택 정보 없음',
-      //   name: error?.name || 'Error'
-      // });
-      
-      // 더 구체적인 에러 메시지 표시
-      let errorMessage = '경매 목록을 불러올 수 없습니다.';
-      if (error?.message?.includes('경매를 찾을 수 없습니다')) {
-        errorMessage = '현재 등록된 경매가 없습니다.';
-      } else if (error?.message?.includes('서버')) {
-        errorMessage = '서버 연결에 실패했습니다.';
-      } else if (error?.message?.includes('네트워크')) {
-        errorMessage = '네트워크 연결을 확인해주세요.';
+      console.error('경매 목록 로드 중 예상치 못한 오류:', error);
+      // 치명적인 에러만 Alert 표시 (네트워크 오류 등)
+      if (error?.message?.includes('네트워크') || error?.message?.includes('서버')) {
+        Alert.alert('오류', '서버 연결에 실패했습니다. 네트워크 연결을 확인해주세요.');
       }
-      
-      Alert.alert('오류', errorMessage);
+      // 경매가 없는 경우는 빈 배열로 설정 (Alert 표시 안 함)
+      setAuctions([]);
+      setEndedAuctions([]);
+      setHotAuction(null);
     } finally {
       setLoading(false);
     }
@@ -322,16 +321,6 @@ export default function MainScreen({ navigation }: MainScreenProps) {
     } catch (error) {
       // console.error('입찰 실패:', error);
       Alert.alert('오류', '입찰에 실패했습니다.');
-    }
-  };
-
-  // 경매 상태에 따른 칩 색상
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return '#4CAF50';
-      case 'ended': return '#F44336';
-      case 'pending': return '#FF9800';
-      default: return '#9E9E9E';
     }
   };
 
@@ -536,14 +525,14 @@ export default function MainScreen({ navigation }: MainScreenProps) {
       </View>
 
       {/* 메인 콘텐츠 */}
-      <ScrollView 
-        style={styles.content} 
+      <ScrollView
+        style={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {auctions.length === 0 ? (
+        {auctions.length === 0 && endedAuctions.length === 0 ? (
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIcon}>
               <IconButton icon="gavel" size={64} iconColor="#ccc" />

@@ -327,7 +327,7 @@ export default function ProfileScreen() {
             <View style={styles.newUserInfo}>
               <View style={styles.newAvatar}>
                 {user.profileImage ? (
-                  <Image source={{ uri: user.profileImage }} style={styles.newAvatarImage} />
+                  <Image source={{ uri: normalizeImageUrl(user.profileImage) }} style={styles.newAvatarImage} />
                 ) : (
                   <Text style={styles.newAvatarText}>{user.name.substring(0, 2)}</Text>
                 )}

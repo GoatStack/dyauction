@@ -30,7 +30,7 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             await logout();
-            navigation.navigate('Welcome');
+            // AuthNavigator가 자동으로 Welcome 화면으로 전환하므로 수동 navigate 불필요
           }
         }
       ]

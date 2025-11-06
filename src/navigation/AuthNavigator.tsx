@@ -33,8 +33,10 @@ export default function AuthNavigator() {
 
   console.log('🚀 isAuthenticated 상태:', isAuthenticated);
 
+  // key를 사용해서 인증 상태 변경 시 네비게이터를 강제로 리마운트
   return (
     <Stack.Navigator
+      key={isAuthenticated ? 'authenticated' : 'guest'}
       screenOptions={{
         headerShown: false,
       }}

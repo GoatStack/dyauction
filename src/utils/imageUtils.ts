@@ -20,7 +20,7 @@ export const normalizeImageUrl = (imageUrl: any): string => {
   if (!imageUrl) {
     return getDefaultImageUrl();
   }
-  
+
   // 배열인 경우 첫 번째 요소 사용
   if (Array.isArray(imageUrl)) {
     if (imageUrl.length > 0 && typeof imageUrl[0] === 'string') {
@@ -28,12 +28,12 @@ export const normalizeImageUrl = (imageUrl: any): string => {
     }
     return getDefaultImageUrl();
   }
-  
+
   // 문자열이 아닌 경우
   if (typeof imageUrl !== 'string') {
     return getDefaultImageUrl();
   }
-  
+
   // 이미 웹 URL인 경우 /api/images/를 /api/auctions/images/로 수정
   if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
     // /api/images/를 /api/auctions/images/로 수정
@@ -42,18 +42,23 @@ export const normalizeImageUrl = (imageUrl: any): string => {
     }
     return imageUrl;
   }
-  
+
   // 로컬 파일 경로인 경우 웹 URL로 변환
   if (imageUrl.startsWith('file://')) {
     const filename = imageUrl.split('/').pop();
     return `${getServerUrl()}/uploads/${filename}`;
   }
-  
+
+  // 상대 경로인 경우 (/, /uploads/, /images/ 등으로 시작)
+  if (imageUrl.startsWith('/')) {
+    return `${getServerUrl()}${imageUrl}`;
+  }
+
   // 파일명만 있는 경우
   if (imageUrl.includes('.jpg') || imageUrl.includes('.png') || imageUrl.includes('.jpeg')) {
     return `${getServerUrl()}/uploads/${imageUrl}`;
   }
-  
+
   return imageUrl;
 };
 
