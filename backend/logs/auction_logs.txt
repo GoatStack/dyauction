@@ -98,3 +98,5 @@
 [2025-10-01T11:16:36.215Z] set_hot | Auction: 16 | User: 3 | Details: {"auctionTitle":"ㅁㄴㅇㅁㄴㅇ","isHot":true}
 [2025-10-01T11:18:47.315Z] created | Auction: 17 | User: 8 | Details: {"title":"고양이판매","category":"도서","startingPrice":1250,"duration":"1d","status":"pending"}
 [2025-10-01T11:19:06.417Z] approved | Auction: 17 | User: 8 | Details: {"startTime":"2025-10-01T11:19:06.378Z","endTime":"2025-10-02T11:19:06.378Z","duration":1440}
+[2025-11-06T08:55:23.814Z] created | Auction: 18 | User: 3 | Details: {"title":"테스트 경매","category":"기타","startingPrice":10000,"duration":"1d","status":"pending"}
+[2025-11-06T08:55:35.257Z] created | Auction: 19 | User: 3 | Details: {"title":"flower","category":"의류","startingPrice":11111,"duration":"1h","status":"pending"}

@@ -537,7 +537,7 @@ router.post('/', auth, async (req: AuthRequest, res) => {
       auctionId: auctionId
     });
   } catch (error) {
-    // console.error('Create auction error:', error);
+    console.error('Create auction error:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
