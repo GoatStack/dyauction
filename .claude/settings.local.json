@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/carey-drtail/Projects/dy-mentee/YumPick/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

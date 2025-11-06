@@ -13,9 +13,14 @@
     "ios:local": "cross-env APP_ENV=LOCAL expo start --ios --clear",
     "ios:prod": "cross-env APP_ENV=PROD expo start --ios --clear",
     "web": "expo start --web",
-    "build:android": "cross-env APP_ENV=PROD eas build --platform android",
-    "build:ios": "cross-env APP_ENV=PROD eas build --platform ios",
-    "build:all": "cross-env APP_ENV=PROD eas build --platform all"
+    "build": "./scripts/build-with-version-bump.sh",
+    "build:skip": "./scripts/build-with-version-bump.sh --skip-bump",
+    "build:android": "cross-env APP_ENV=PROD node ./scripts/bump-app-version.js && eas build --platform android --profile production --non-interactive",
+    "build:android:skip": "cross-env APP_ENV=PROD node ./scripts/bump-app-version.js --skip-bump && eas build --platform android --profile production --non-interactive",
+    "build:ios": "cross-env APP_ENV=PROD node ./scripts/bump-app-version.js && eas build --platform ios --profile production --non-interactive",
+    "build:ios:skip": "cross-env APP_ENV=PROD node ./scripts/bump-app-version.js --skip-bump && eas build --platform ios --profile production --non-interactive",
+    "build:all": "cross-env APP_ENV=PROD eas build --platform all",
+    "update": "./scripts/publish-update.sh"
   },
   "dependencies": {
     "@expo/cli": "^54.0.9",
@@ -32,6 +37,7 @@
     "expo-image-picker": "~17.0.8",
     "expo-linear-gradient": "~15.0.7",
     "expo-status-bar": "~3.0.8",
+    "expo-updates": "~29.0.12",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.4",

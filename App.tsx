@@ -7,6 +7,7 @@ import AuthNavigator from './src/navigation/AuthNavigator';
 import { initDatabase } from './src/utils/database';
 import PushNotificationService from './src/services/pushNotificationService';
 import { AuthProvider } from './src/contexts/AuthContext';
+import { EASUpdateProvider } from './src/contexts/EASUpdateProvider';
 
 export default function App() {
   useEffect(() => {
@@ -27,14 +28,16 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <PaperProvider>
-        <AuthProvider>
-          <NavigationContainer>
-            <StatusBar style="auto" />
-            <AuthNavigator />
-          </NavigationContainer>
-        </AuthProvider>
-      </PaperProvider>
+      <EASUpdateProvider>
+        <PaperProvider>
+          <AuthProvider>
+            <NavigationContainer>
+              <StatusBar style="auto" />
+              <AuthNavigator />
+            </NavigationContainer>
+          </AuthProvider>
+        </PaperProvider>
+      </EASUpdateProvider>
     </SafeAreaProvider>
   );
 }

@@ -1,13 +1,9 @@
-import Constants from 'expo-constants';
-
-// 환경변수 가져오기
-const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl;
-const API_TIMEOUT = Constants.expoConfig?.extra?.apiTimeout;
+import { config } from './config';
 
 // API 설정
 export const API_CONFIG = {
   // 백엔드 서버 - 환경 변수에서 가져오기
-  BASE_URL: API_BASE_URL || 'http://40.82.159.69:65000/api',
+  BASE_URL: config.apiBaseUrl,
 
   // API 엔드포인트
   ENDPOINTS: {
@@ -18,7 +14,7 @@ export const API_CONFIG = {
   },
 
   // 타임아웃 설정
-  TIMEOUT: API_TIMEOUT ? parseInt(API_TIMEOUT, 10) : 10000,
+  TIMEOUT: config.apiTimeout,
 };
 
 // 개발 환경에서 사용할 수 있는 IP 주소들 (실제 IP 우선)
