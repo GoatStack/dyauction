@@ -1,9 +1,13 @@
-import { API_BASE_URL, API_TIMEOUT } from '@env';
+import Constants from 'expo-constants';
+
+// 환경변수 가져오기
+const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl;
+const API_TIMEOUT = Constants.expoConfig?.extra?.apiTimeout;
 
 // API 설정
 export const API_CONFIG = {
   // 백엔드 서버 - 환경 변수에서 가져오기
-  BASE_URL: API_BASE_URL || (__DEV__ ? 'http://40.82.159.69:65000/api' : 'https://40.82.159.69:65000/api'),
+  BASE_URL: API_BASE_URL || 'http://40.82.159.69:65000/api',
 
   // API 엔드포인트
   ENDPOINTS: {
@@ -13,7 +17,7 @@ export const API_CONFIG = {
     ADMIN: '/admin',
   },
 
-  // 타임아웃 설정 - 환경 변수에서 가져오기
+  // 타임아웃 설정
   TIMEOUT: API_TIMEOUT ? parseInt(API_TIMEOUT, 10) : 10000,
 };
 

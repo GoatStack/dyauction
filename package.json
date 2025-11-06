@@ -4,18 +4,18 @@
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
-    "start:local": "cp .env.local .env && expo start",
-    "start:prod": "cp .env.production .env && expo start",
+    "start:local": "cross-env APP_ENV=LOCAL expo start --clear",
+    "start:prod": "cross-env APP_ENV=PROD expo start --clear",
     "android": "expo start --android",
-    "android:local": "cp .env.local .env && expo start --android",
-    "android:prod": "cp .env.production .env && expo start --android",
+    "android:local": "cross-env APP_ENV=LOCAL expo start --android --clear",
+    "android:prod": "cross-env APP_ENV=PROD expo start --android --clear",
     "ios": "expo start --ios",
-    "ios:local": "cp .env.local .env && expo start --ios",
-    "ios:prod": "cp .env.production .env && expo start --ios",
+    "ios:local": "cross-env APP_ENV=LOCAL expo start --ios --clear",
+    "ios:prod": "cross-env APP_ENV=PROD expo start --ios --clear",
     "web": "expo start --web",
-    "build:android": "cp .env.production .env && eas build --platform android",
-    "build:ios": "cp .env.production .env && eas build --platform ios",
-    "build:all": "cp .env.production .env && eas build --platform all"
+    "build:android": "cross-env APP_ENV=PROD eas build --platform android",
+    "build:ios": "cross-env APP_ENV=PROD eas build --platform ios",
+    "build:all": "cross-env APP_ENV=PROD eas build --platform all"
   },
   "dependencies": {
     "@expo/cli": "^54.0.9",
@@ -26,6 +26,7 @@
     "@react-navigation/native": "^7.1.17",
     "@react-navigation/stack": "^7.4.7",
     "expo": "^54.0.0",
+    "expo-constants": "^18.0.10",
     "expo-dev-client": "~6.0.12",
     "expo-document-picker": "~14.0.7",
     "expo-image-picker": "~17.0.8",
@@ -44,7 +45,9 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~19.1.13",
-    "react-native-dotenv": "^3.4.11",
+    "cross-env": "^10.1.0",
+    "dotenv": "^17.2.3",
+    "dotenv-cli": "^11.0.0",
     "typescript": "~5.8.3"
   },
   "private": true
