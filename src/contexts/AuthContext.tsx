@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { setLogoutCallback } from '../utils/database';
 
 interface User {
   id: number;
@@ -39,6 +40,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     loadStoredAuth();
+
+    // database.ts의 apiCall에서 401 에러 시 사용할 로그아웃 콜백 등록
+    setLogoutCallback(() => {
+      // 상태 업데이트
+      setToken(null);
+      setUser(null);
+    });
   }, []);
 
   const loadStoredAuth = async () => {

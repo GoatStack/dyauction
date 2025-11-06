@@ -31,20 +31,25 @@ export default function AuthNavigator() {
     );
   }
 
-  const initialRoute = isAuthenticated ? "Main" : "Welcome";
-  console.log('🚀 초기 라우트:', initialRoute);
+  console.log('🚀 isAuthenticated 상태:', isAuthenticated);
 
   return (
     <Stack.Navigator
-      initialRouteName={initialRoute}
       screenOptions={{
         headerShown: false,
       }}
     >
-      <Stack.Screen name="Welcome" component={WelcomeScreen} />
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="SignUp" component={SignUpScreen} />
-      <Stack.Screen name="Main" component={MainNavigator} />
+      {isAuthenticated ? (
+        // 인증된 경우 - Main 화면만 보여줌
+        <Stack.Screen name="Main" component={MainNavigator} />
+      ) : (
+        // 인증되지 않은 경우 - 로그인 관련 화면들
+        <>
+          <Stack.Screen name="Welcome" component={WelcomeScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="SignUp" component={SignUpScreen} />
+        </>
+      )}
     </Stack.Navigator>
   );
 }

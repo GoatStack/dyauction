@@ -4,6 +4,13 @@ import { API_CONFIG } from '../config/api'
 // 백엔드 API 기본 URL - API_CONFIG 사용
 const API_BASE_URL = API_CONFIG.BASE_URL
 
+// 로그아웃 콜백 (AuthContext에서 설정)
+let logoutCallback: (() => void) | null = null
+
+export const setLogoutCallback = (callback: () => void) => {
+  logoutCallback = callback
+}
+
 // API 호출 헬퍼 함수]
 export const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_BASE_URL}${endpoint}`
@@ -53,9 +60,12 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}) => {
 
     // 401 에러 시 토큰 갱신 시도
     if (response.status === 401) {
+      console.log('🔴 401 에러 발생 - 토큰 갱신 시도')
+
       try {
         const newToken = await refreshToken()
         if (newToken) {
+          console.log('✅ 토큰 갱신 성공 - 재시도')
           // 새로운 토큰으로 재시도
           const retryHeaders =
             options.body instanceof FormData
@@ -76,21 +86,54 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}) => {
           })
 
           if (retryResponse.ok) {
+            console.log('✅ 재시도 성공')
             const contentType = retryResponse.headers.get('content-type')
             if (contentType && contentType.includes('application/json')) {
               return retryResponse.json()
             } else {
               return retryResponse.text()
             }
+          } else {
+            console.log('❌ 재시도 실패 - 로그아웃')
+            // 재시도도 실패 - 로그아웃 처리
+            await AsyncStorage.removeItem('authToken')
+            await AsyncStorage.removeItem('authUser')
+            ;(global as any).token = null
+
+            if (logoutCallback) {
+              logoutCallback()
+            }
+
+            throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.')
           }
         }
       } catch (refreshError) {
         // 토큰 갱신 실패 시 로그아웃 처리
+        console.log('🔴 토큰 갱신 실패 - 로그아웃 처리 시작')
         await AsyncStorage.removeItem('authToken')
         await AsyncStorage.removeItem('authUser')
         ;(global as any).token = null
+
+        // 로그아웃 콜백 호출
+        if (logoutCallback) {
+          console.log('🔴 로그아웃 콜백 호출')
+          logoutCallback()
+        }
+
         throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.')
       }
+
+      // refresh도 안되고 재시도도 안되면 여기 도달
+      console.log('🔴 토큰 갱신 불가 - 로그아웃')
+      await AsyncStorage.removeItem('authToken')
+      await AsyncStorage.removeItem('authUser')
+      ;(global as any).token = null
+
+      if (logoutCallback) {
+        logoutCallback()
+      }
+
+      throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.')
     }
 
     if (!response.ok) {
