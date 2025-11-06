@@ -5,7 +5,7 @@ import { API_CONFIG } from '../config/api'
 const API_BASE_URL = API_CONFIG.BASE_URL
 
 // API 호출 헬퍼 함수]
-const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+export const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_BASE_URL}${endpoint}`
 
   console.log('🌐 API 호출 시작')

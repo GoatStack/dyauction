@@ -18,6 +18,7 @@ import { AuctionItem } from '../types/auction';
 import { useAuth } from '../contexts/AuthContext';
 import { normalizeImageUrl } from '../utils/imageUtils';
 import { getApiUrl, API_CONFIG } from '../config/api';
+import { apiCall } from '../utils/database';
 
 interface ProfileStats {
   sales: number;
@@ -79,36 +80,21 @@ export default function ProfileScreen() {
   // 실제 사용자 프로필 정보 로드
   const loadUserProfile = async () => {
     try {
-      // 로그인된 사용자 정보 가져오기 (5초 타임아웃)
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
-      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USERS + '/profile'), {
-        headers: { 
-          'Authorization': `Bearer ${token || 'test-token'}`,
-          'Content-Type': 'application/json'
-        },
-        signal: controller.signal
+      const userData = await apiCall(API_CONFIG.ENDPOINTS.USERS + '/profile', {
+        method: 'GET'
       });
-      
-      clearTimeout(timeoutId);
-      
-      if (response.ok) {
-        const userData = await response.json();
-        setUser({
-          id: userData.id,
-          studentId: userData.studentId,
-          name: userData.name,
-          email: userData.email,
-          password: '',
-          verificationStatus: userData.verificationStatus,
-          createdAt: new Date(userData.createdAt),
-          isAdmin: userData.isAdmin,
-          profileImage: userData.profileImage,
-        });
-      } else {
-        setUser(null);
-      }
+
+      setUser({
+        id: userData.id,
+        studentId: userData.studentId,
+        name: userData.name,
+        email: userData.email,
+        password: '',
+        verificationStatus: userData.verificationStatus,
+        createdAt: new Date(userData.createdAt),
+        isAdmin: userData.isAdmin,
+        profileImage: userData.profileImage,
+      });
     } catch (error) {
       // console.error('프로필 로드 중 오류:', error.message);
       setUser(null);
@@ -118,33 +104,11 @@ export default function ProfileScreen() {
   // 실제 사용자 통계 정보 로드
   const loadUserStats = async () => {
     try {
-      
-      // 통계 정보 가져오기 (5초 타임아웃)
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
-      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USERS + '/stats'), {
-        headers: { 
-          'Authorization': `Bearer ${token || 'test-token'}`,
-          'Content-Type': 'application/json'
-        },
-        signal: controller.signal
+      const statsData = await apiCall(API_CONFIG.ENDPOINTS.USERS + '/stats', {
+        method: 'GET'
       });
-      
-      clearTimeout(timeoutId);
-      
-      
-      if (response.ok) {
-        const statsData = await response.json();
-        setStats(statsData);
-      } else {
-        // API 호출 실패 시 빈 상태로 설정
-        setStats({
-          sales: 0,
-          bids: 0,
-          wins: 0,
-        });
-      }
+
+      setStats(statsData);
     } catch (error) {
       // console.error('통계 로드 중 오류:', error.message);
       // 에러 시 빈 상태로 설정
@@ -170,46 +134,30 @@ export default function ProfileScreen() {
       if (!user?.id) {
         return;
       }
-      
-      // 경매 데이터 가져오기 (5초 타임아웃)
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
-      const response = await fetch(getApiUrl(`${API_CONFIG.ENDPOINTS.AUCTIONS}?type=${tab}&userId=${user?.id}`), {
-        headers: { 
-          'Authorization': `Bearer ${token || 'test-token'}`,
-          'Content-Type': 'application/json'
-        },
-        signal: controller.signal
+
+      const data = await apiCall(`${API_CONFIG.ENDPOINTS.AUCTIONS}?type=${tab}&userId=${user?.id}`, {
+        method: 'GET'
       });
-      
-      clearTimeout(timeoutId);
-      
-      if (response.ok) {
-        const data = await response.json();
-        
-        // 데이터 변환 (API 응답을 AuctionItem 형태로 변환)
-        const transformedData = data.map((auction: any) => ({
-          id: auction.id.toString(),
-          title: auction.title,
-          description: auction.description,
-          startingPrice: auction.startingPrice,
-          currentPrice: auction.currentPrice,
-          imageUrl: auction.imageUrl,
-          images: auction.images || [],
-          sellerId: auction.sellerId?.toString() || '1',
-          sellerName: auction.sellerName || '사용자',
-          status: auction.status,
-          endTime: new Date(auction.endTime),
-          createdAt: new Date(auction.createdAt),
-          bids: auction.bids || [],
-          participants: auction.participants || 0,
-        }));
-        
-        setMyAuctions(transformedData);
-      } else {
-        setMyAuctions([]);
-      }
+
+      // 데이터 변환 (API 응답을 AuctionItem 형태로 변환)
+      const transformedData = data.map((auction: any) => ({
+        id: auction.id.toString(),
+        title: auction.title,
+        description: auction.description,
+        startingPrice: auction.startingPrice,
+        currentPrice: auction.currentPrice,
+        imageUrl: auction.imageUrl,
+        images: auction.images || [],
+        sellerId: auction.sellerId?.toString() || '1',
+        sellerName: auction.sellerName || '사용자',
+        status: auction.status,
+        endTime: new Date(auction.endTime),
+        createdAt: new Date(auction.createdAt),
+        bids: auction.bids || [],
+        participants: auction.participants || 0,
+      }));
+
+      setMyAuctions(transformedData);
     } catch (error) {
       // console.error('경매 데이터 로드 실패:', error.message);
       setMyAuctions([]);

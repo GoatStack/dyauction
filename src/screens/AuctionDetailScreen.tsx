@@ -26,6 +26,7 @@ import { notificationManager } from '../utils/notificationManager';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { normalizeImageUrl, formatAuctionImages } from '../utils/imageUtils';
 import { findWorkingApiUrl, API_CONFIG } from '../config/api';
+import { apiCall } from '../utils/database';
 
 const { width, height } = Dimensions.get('window');
 
@@ -111,29 +112,29 @@ export default function AuctionDetailScreen() {
     
     const interval = setInterval(async () => {
       try {
-        const response = await fetch(`${API_CONFIG.BASE_URL}/auctions/${auctionId}`);
-        if (response.ok) {
-          const auctionData = await response.json();
-          const bids = auctionData.bids || [];
-          
-          setRealTimeData(prev => {
-            const newData = {
-              currentPrice: auctionData.current_price,
-              bidCount: bids.length,
-              lastBidTime: bids.length > 0 ? new Date(bids[0].created_at) : prev.lastBidTime,
-              participants: auctionData.participantCount || 0,
-            };
-            return newData;
-          });
-          
-          setBidHistory(bids);
-          
-          setAuction(prev => prev ? {
-            ...prev,
+        const auctionData = await apiCall(`/auctions/${auctionId}`, {
+          method: 'GET'
+        });
+
+        const bids = auctionData.bids || [];
+
+        setRealTimeData(prev => {
+          const newData = {
             currentPrice: auctionData.current_price,
             bidCount: bids.length,
-          } : null);
-        }
+            lastBidTime: bids.length > 0 ? new Date(bids[0].created_at) : prev.lastBidTime,
+            participants: auctionData.participantCount || 0,
+          };
+          return newData;
+        });
+
+        setBidHistory(bids);
+
+        setAuction(prev => prev ? {
+          ...prev,
+          currentPrice: auctionData.current_price,
+          bidCount: bids.length,
+        } : null);
       } catch (error) {
         // 실시간 업데이트 실패 시 조용히 처리
       }
@@ -168,83 +169,59 @@ export default function AuctionDetailScreen() {
     try {
       setLoading(true);
 
-      console.log('🌐 경매 상세 API 호출 주소:', API_CONFIG.BASE_URL);
-      console.log('📡 경매 상세 요청 URL:', `${API_CONFIG.BASE_URL}/auctions/${auctionId}`);
+      console.log('🌐 경매 상세 API 호출');
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/auctions/${auctionId}`);
-      
-      if (response.ok) {
-        const auctionData = await response.json();
-        
-        // 이미지 배열 처리
-        let images: string[] = [];
-        if (auctionData.images) {
-          try {
-            images = JSON.parse(auctionData.images);
-          } catch (e) {
-            console.log('이미지 파싱 실패, 단일 이미지로 처리');
-            images = [auctionData.images];
-          }
+      const auctionData = await apiCall(`/auctions/${auctionId}`, {
+        method: 'GET'
+      });
+
+      // 이미지 배열 처리
+      let images: string[] = [];
+      if (auctionData.images) {
+        try {
+          images = JSON.parse(auctionData.images);
+        } catch (e) {
+          console.log('이미지 파싱 실패, 단일 이미지로 처리');
+          images = [auctionData.images];
         }
-        
-        // 입찰 내역 처리
-        const bids = auctionData.bids || [];
-        const bidCount = bids.length;
-        
-        const formattedAuction: Auction = {
-          id: auctionData.id,
-          title: auctionData.title,
-          description: auctionData.description,
-          startingPrice: auctionData.starting_price,
-          currentPrice: auctionData.current_price,
-          endTime: auctionData.end_time,
-          status: auctionData.status,
-          seller: { 
-            username: auctionData.seller_name || '판매자',
-            id: auctionData.seller_id
-          },
-          bidCount: bidCount,
-          imageUrl: auctionData.imageUrl || 'https://via.placeholder.com/400x300/cccccc/666666?text=이미지+없음',
-          images: images,
-        };
-        
-        // 실시간 데이터 업데이트
-        setRealTimeData({
-          currentPrice: auctionData.current_price,
-          bidCount: bidCount,
-          lastBidTime: bids.length > 0 ? new Date(bids[0].created_at) : null,
-          participants: auctionData.participantCount || 0,
-        });
-        
-        // 입찰 내역 저장
-        setBidHistory(bids);
-        
-        setAuction(formattedAuction);
-        
-        // 현재 사용자와 판매자 비교
-        await checkOwnership();
-      } else {
-        // API 실패 시 목업 데이터 사용
-        const mockAuction: Auction = {
-          id: auctionId,
-          title: '테스트 경매 상품',
-          description: '이것은 테스트 경매 상품입니다. 상품에 대한 자세한 설명이 여기에 들어갑니다.',
-          startingPrice: 10000,
-          currentPrice: 15000,
-          endTime: '2024-12-31 23:59:00',
-          status: 'active',
-          seller: { username: '판매자' },
-          bidCount: 5,
-          imageUrl: 'https://via.placeholder.com/400x300/cccccc/666666?text=경매+이미지',
-          images: [
-            'https://via.placeholder.com/400x300/cccccc/666666?text=이미지1',
-            'https://via.placeholder.com/400x300/dddddd/666666?text=이미지2',
-            'https://via.placeholder.com/400x300/eeeeee/666666?text=이미지3',
-          ],
-        };
-        
-        setAuction(mockAuction);
       }
+
+      // 입찰 내역 처리
+      const bids = auctionData.bids || [];
+      const bidCount = bids.length;
+
+      const formattedAuction: Auction = {
+        id: auctionData.id,
+        title: auctionData.title,
+        description: auctionData.description,
+        startingPrice: auctionData.starting_price,
+        currentPrice: auctionData.current_price,
+        endTime: auctionData.end_time,
+        status: auctionData.status,
+        seller: {
+          username: auctionData.seller_name || '판매자',
+          id: auctionData.seller_id
+        },
+        bidCount: bidCount,
+        imageUrl: auctionData.imageUrl || 'https://via.placeholder.com/400x300/cccccc/666666?text=이미지+없음',
+        images: images,
+      };
+
+      // 실시간 데이터 업데이트
+      setRealTimeData({
+        currentPrice: auctionData.current_price,
+        bidCount: bidCount,
+        lastBidTime: bids.length > 0 ? new Date(bids[0].created_at) : null,
+        participants: auctionData.participantCount || 0,
+      });
+
+      // 입찰 내역 저장
+      setBidHistory(bids);
+
+      setAuction(formattedAuction);
+
+      // 현재 사용자와 판매자 비교
+      await checkOwnership();
     } catch (error) {
       console.error('경매 상세 정보 로드 실패:', error);
       if (typeof error === 'object' && error !== null && 'message' in error) {
@@ -347,76 +324,49 @@ export default function AuctionDetailScreen() {
 
     try {
       setIsBidding(true);
-      
-      // 실제 입찰 API 호출
-      let token = (global as any).token;
-      
-      // global.token이 없으면 AsyncStorage에서 가져오기
-      if (!token) {
-        token = await AsyncStorage.getItem('token');
-        console.log('🔑 AsyncStorage에서 토큰 가져옴:', token ? '토큰 있음' : '토큰 없음');
-      } else {
-        console.log('🔑 Global 토큰 사용:', token ? '토큰 있음' : '토큰 없음');
-      }
-      
-      if (!token) {
-        Alert.alert('오류', '로그인이 필요합니다.');
-        return;
-      }
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/auctions/${auctionId}/bid`, {
+      const result = await apiCall(`/auctions/${auctionId}/bid`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
         body: JSON.stringify({ amount }),
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        
-        // 입찰 성공 로그
-        console.log(`[입찰 성공] 경매: ${auction ? auction.title : ''}, 금액: ${amount}, 새로운 현재가: ${result.newCurrentPrice}`);
-        
-        // 입찰 성공 알림 추가
-        const userData = await AsyncStorage.getItem('user');
-        if (userData) {
-          const user = JSON.parse(userData);
-          if (auction) {
-            notificationManager.addBidPlacedNotification(user.id, auction.id, amount);
-          }
+      // 입찰 성공 로그
+      console.log(`[입찰 성공] 경매: ${auction ? auction.title : ''}, 금액: ${amount}, 새로운 현재가: ${result.newCurrentPrice}`);
+
+      // 입찰 성공 알림 추가
+      const userData = await AsyncStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        if (auction) {
+          notificationManager.addBidPlacedNotification(user.id, auction.id, amount);
         }
-        
-        // 실시간 데이터 즉시 업데이트
-        setRealTimeData(prev => ({
-          ...prev,
-          currentPrice: result.newCurrentPrice,
-          bidCount: result.bidCount,
-          participants: result.participantCount,
-          lastBidTime: result.lastBidTime ? new Date(result.lastBidTime) : prev.lastBidTime,
-        }));
-        
-        // 경매 정보 즉시 업데이트
-        setAuction(prev => prev ? {
-          ...prev,
-          currentPrice: result.newCurrentPrice,
-          bidCount: result.bidCount,
-        } : null);
-        
-        // 입찰 성공 후 슬라이더 값을 새로운 최소 입찰가로 설정
-        const newMinBid = result.newCurrentPrice + 1000;
-        setSliderValue(newMinBid);
-        setBidAmount(newMinBid.toString());
-        
-        Alert.alert('성공', '입찰이 완료되었습니다!');
-        
-        // 입찰 내역 새로고침
-        loadAuctionDetail();
-      } else {
-        const errorData = await response.json();
-        Alert.alert('오류', errorData.message || '입찰에 실패했습니다.');
       }
+
+      // 실시간 데이터 즉시 업데이트
+      setRealTimeData(prev => ({
+        ...prev,
+        currentPrice: result.newCurrentPrice,
+        bidCount: result.bidCount,
+        participants: result.participantCount,
+        lastBidTime: result.lastBidTime ? new Date(result.lastBidTime) : prev.lastBidTime,
+      }));
+
+      // 경매 정보 즉시 업데이트
+      setAuction(prev => prev ? {
+        ...prev,
+        currentPrice: result.newCurrentPrice,
+        bidCount: result.bidCount,
+      } : null);
+
+      // 입찰 성공 후 슬라이더 값을 새로운 최소 입찰가로 설정
+      const newMinBid = result.newCurrentPrice + 1000;
+      setSliderValue(newMinBid);
+      setBidAmount(newMinBid.toString());
+
+      Alert.alert('성공', '입찰이 완료되었습니다!');
+
+      // 입찰 내역 새로고침
+      loadAuctionDetail();
     } catch (error) {
       console.error('입찰 실패:', error);
       Alert.alert('오류', '입찰에 실패했습니다.');

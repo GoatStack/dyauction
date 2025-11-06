@@ -23,6 +23,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { API_CONFIG } from '../config/api';
 import { notificationManager } from '../utils/notificationManager';
 import { useAuth } from '../contexts/AuthContext';
+import { apiCall } from '../utils/database';
 
 interface AuctionForm {
   title: string;
@@ -209,37 +210,18 @@ export default function CreateAuctionScreen() {
         // FormData 생성
         const formData = await createFormData(imageUri);
 
-        const uploadUrl = `${API_CONFIG.BASE_URL}/auctions/upload-image`;
-        console.log('📍 업로드 URL:', uploadUrl);
-        console.log('🔑 토큰:', token ? `${token.substring(0, 20)}...` : 'test-token');
-
-        console.log('🚀 이미지 업로드 Fetch 시작...');
-        const response = await fetch(uploadUrl, {
+        console.log('🚀 이미지 업로드 시작...');
+        const result = await apiCall('/auctions/upload-image', {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token || 'test-token'}`,
-            // Content-Type은 FormData일 때 자동으로 설정됨
-          },
           body: formData,
         });
 
-        console.log('✅ Fetch 완료');
-        console.log('📊 Response Status:', response.status);
-        console.log('📊 Response OK:', response.ok);
+        console.log('✅ 이미지 업로드 성공:', result);
 
-        if (response.ok) {
-          const result = await response.json();
-          console.log('✅ 이미지 업로드 성공:', result);
-
-          // 백엔드에서 반환하는 imageUrl이 /images/{imageId} 형태이므로 BASE_URL과 결합
-          const imageUrl = `${API_CONFIG.BASE_URL}${result.imageUrl}`;
-          console.log('🔗 최종 이미지 URL:', imageUrl);
-          uploadedUrls.push(imageUrl);
-        } else {
-          const errorText = await response.text();
-          console.error('❌ 이미지 업로드 실패:', errorText);
-          throw new Error(`이미지 업로드 실패: ${response.status}`);
-        }
+        // 백엔드에서 반환하는 imageUrl이 /images/{imageId} 형태이므로 BASE_URL과 결합
+        const imageUrl = `${API_CONFIG.BASE_URL}${result.imageUrl}`;
+        console.log('🔗 최종 이미지 URL:', imageUrl);
+        uploadedUrls.push(imageUrl);
       } catch (error) {
         console.error(`❌ 이미지 ${i + 1} 업로드 오류:`, error);
         if (error instanceof Error) {
@@ -274,47 +256,19 @@ export default function CreateAuctionScreen() {
       console.log('✅ 업로드된 이미지 URLs:', imageUrls);
 
       // 경매 등록 API 호출
-      const auctionUrl = `${API_CONFIG.BASE_URL}/auctions`;
-      console.log('🌐 경매 등록 API 호출 주소:', API_CONFIG.BASE_URL);
-      console.log('📡 경매 등록 요청 URL:', auctionUrl);
+      console.log('🌐 경매 등록 API 호출');
 
-      const response = await fetch(auctionUrl, {
+      const result = await apiCall('/auctions', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
         body: JSON.stringify({
-        title: formData.title,
-        description: formData.description,
+          title: formData.title,
+          description: formData.description,
           startingPrice: parseInt(formData.startingPrice),
           duration: formData.duration,
           category: formData.category,
           imageUris: imageUrls,
         }),
       });
-
-      if (!response.ok) {
-        let errorMessage = '경매 등록에 실패했습니다.';
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorMessage;
-        } catch (parseError) {
-          // JSON 파싱 실패 시 응답 텍스트 확인
-          try {
-            const responseText = await response.text();
-            console.error('Response text:', responseText);
-            if (responseText.includes('HTML')) {
-              errorMessage = '서버 연결 오류입니다. 백엔드 서버를 확인해주세요.';
-            }
-          } catch (textError) {
-            errorMessage = '서버 응답을 읽을 수 없습니다.';
-          }
-        }
-        throw new Error(errorMessage);
-      }
-
-      const result = await response.json();
       
       // 알림 추가
       const userData = await AsyncStorage.getItem('user');

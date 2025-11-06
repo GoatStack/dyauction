@@ -13,6 +13,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { getApiUrl, API_CONFIG } from '../config/api';
+import { apiCall } from '../utils/database';
 
 interface User {
   id: string;
@@ -60,38 +61,25 @@ export default function EditProfileScreen() {
 
     try {
       setIsRequestingStudentIdChange(true);
-      
-      const token = (global as any).token;
-      if (!token) {
-        Alert.alert('오류', '로그인이 필요합니다.');
-        return;
-      }
 
-      const response = await fetch(getApiUrl('/users/request-student-id-change'), {
+      const result = await apiCall('/users/request-student-id-change', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({
           newStudentId: newStudentId.trim()
         })
       });
 
-      const result = await response.json();
-
-      if (response.ok) {
-        Alert.alert(
-          '요청 제출 완료',
-          '학번 변경 요청이 제출되었습니다. 관리자 승인을 기다려주세요.',
-          [{ text: '확인', onPress: () => setNewStudentId('') }]
-        );
-      } else {
-        Alert.alert('오류', result.error || '학번 변경 요청에 실패했습니다.');
-      }
+      Alert.alert(
+        '요청 제출 완료',
+        '학번 변경 요청이 제출되었습니다. 관리자 승인을 기다려주세요.',
+        [{ text: '확인', onPress: () => setNewStudentId('') }]
+      );
     } catch (error) {
       console.error('Failed to request student ID change:', error);
-      Alert.alert('오류', '학번 변경 요청 중 오류가 발생했습니다.');
+      const errorMessage = error instanceof Error && error.message
+        ? error.message
+        : '학번 변경 요청 중 오류가 발생했습니다.';
+      Alert.alert('오류', errorMessage);
     } finally {
       setIsRequestingStudentIdChange(false);
     }
@@ -99,24 +87,10 @@ export default function EditProfileScreen() {
 
   const loadUserProfile = async () => {
     try {
-      const token = (global as any).token;
-      if (!token) {
-        console.error('No token found');
-        return;
-      }
-
-      const response = await fetch(getApiUrl('/users/profile'), {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const userData = await apiCall('/users/profile', {
+        method: 'GET'
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const userData = await response.json();
       console.log('Loaded user profile:', userData);
 
       const actualUser: User = {

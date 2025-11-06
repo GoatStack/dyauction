@@ -10,6 +10,7 @@ import {
 } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { API_CONFIG } from '../config/api';
+import { apiCall } from '../utils/database';
 
 export default function ChangePasswordScreen() {
   const navigation = useNavigation<any>();
@@ -41,51 +42,30 @@ export default function ChangePasswordScreen() {
 
     setIsLoading(true);
     try {
-      const apiUrl = `${API_CONFIG.BASE_URL}/users/change-password`;
-      const token = (global as any).token || 'test-token';
-
       console.log('🌐 비밀번호 변경 API 호출');
-      console.log('📍 URL:', apiUrl);
-      console.log('🔑 토큰:', token ? `${token.substring(0, 20)}...` : '없음');
 
-      // 실제 API 호출
-      console.log('🚀 Fetch 시작...');
-      const response = await fetch(apiUrl, {
+      const result = await apiCall('/users/change-password', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({
           currentPassword,
           newPassword
         })
       });
 
-      console.log('✅ Fetch 완료');
-      console.log('📊 Response Status:', response.status);
-      console.log('📊 Response OK:', response.ok);
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log('✅ 비밀번호 변경 성공:', result);
-        Alert.alert('성공', result.message || '비밀번호가 성공적으로 변경되었습니다.', [
-          { text: '확인', onPress: () => navigation.goBack() }
-        ]);
-      } else {
-        console.log('❌ 비밀번호 변경 실패');
-        const errorData = await response.json();
-        console.log('❌ 에러 데이터:', errorData);
-        Alert.alert('오류', errorData.error || '비밀번호 변경에 실패했습니다.');
-      }
+      console.log('✅ 비밀번호 변경 성공:', result);
+      Alert.alert('성공', result.message || '비밀번호가 성공적으로 변경되었습니다.', [
+        { text: '확인', onPress: () => navigation.goBack() }
+      ]);
     } catch (error) {
       console.error('❌ 비밀번호 변경 오류:', error);
-      console.error('❌ 오류 타입:', typeof error);
       if (error instanceof Error) {
         console.error('❌ 오류 메시지:', error.message);
         console.error('❌ 오류 스택:', error.stack);
       }
-      Alert.alert('오류', '네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+      const errorMessage = error instanceof Error && error.message
+        ? error.message
+        : '네트워크 오류가 발생했습니다. 다시 시도해주세요.';
+      Alert.alert('오류', errorMessage);
     } finally {
       setIsLoading(false);
     }
