@@ -93,14 +93,6 @@ process.on('SIGINT', () => {
   });
 });
 
-// CORS headers are already set via the cors middleware above.
-app.options('*', (req, res) => {
-  console.log('OPTIONS headers from client:', req.headers);
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8082');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.sendStatus(200);
-});
+// CORS is handled by the cors middleware above, so no manual OPTIONS handler is needed
 
 export default app;
